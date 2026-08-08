@@ -256,5 +256,10 @@ not on this machine. `make_tikz.py` prints that rather than emitting an empty
 panel.
 
 The supporting material (pre-registration, gate, per-layer breakdown, figures,
-compute) is now **numbered sections 10–14 of the main body** rather than a
-lettered appendix; `\appendix` is not used. Restoring it is one line.
+compute) is now **numbered sections 10–15 of the main body** rather than a
+lettered appendix; `\appendix` is not used. It sits **before** the back matter
+and the bibliography, because the paper closes with the references. Reverting to
+a conventional lettered appendix means moving that block after
+`\bibliography{refs}`, adding `\appendix` at its head, and changing the
+`Section~\ref{app:...}` cross-references back to `Appendix~\ref{...}`; the
+comment above the block says so.
