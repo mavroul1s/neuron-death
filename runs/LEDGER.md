@@ -224,3 +224,37 @@ order a reader sees over the last stretch, and a label order that contradicts th
 picture is worse than no label.
 
 No data changed; the plotted series are identical. 153 tests still pass.
+
+### 2026-08-08 — figures rewritten as native LaTeX; one real estimator bug found
+
+The paper's data figures are now generated as **PGFPlots `.tex`** by
+`paper/make_tikz.py`, from the same `runs/_extracts/` parquet files the
+matplotlib versions read, and `\input` into the manuscript. Vector at any zoom,
+type matching the body text, and the coordinates are legible in the source.
+`paper/tex/plotstyle.tex` holds the shared palette and axis style. A checker
+compares every emitted coordinate against `paper/numbers.json` — 58 values, all
+matching — so the two generators cannot silently drift.
+
+**Estimator bug in `figures.py:fig_gate_dose_response`, fixed.** It plotted
+`iqm(early) - iqm(late)`, differencing two separately-trimmed windows. The frozen
+plan's gate statistic is the **IQM of the per-seed drop**
+(`analysis_plan.json:gate.accuracy_criterion.statistic`). The two disagree by up
+to **0.73 pp** at the low learning rates — lr=0.001 read −0.45 pp where the
+correct value is −1.18 pp. **`gate.py` was always right**, so the frozen PASS
+verdict at lr=0.1 is unaffected and no result changes; only that one figure did.
+Caught by the coordinate checker, which is the argument for having it.
+
+**Legend placement.** Every legend now sits outside the plot area. The matplotlib
+versions labelled series *on top of* the curves they named (`fig3` panels (a) and
+(c)) and put a legend box over both curves in `fig6`'s first panel. Panel titles
+are lifted clear of the legends, and panels that share series share one legend
+rather than repeating it and colliding with the neighbouring panel's.
+
+`fig4_c4_recurrence` remains a matplotlib PDF: its per-unit recycle counts need
+`neurons.parquet` for the `random_matched` and `inverse_matched` arms, which is
+not on this machine. `make_tikz.py` prints that rather than emitting an empty
+panel.
+
+The supporting material (pre-registration, gate, per-layer breakdown, figures,
+compute) is now **numbered sections 10–14 of the main body** rather than a
+lettered appendix; `\appendix` is not used. Restoring it is one line.

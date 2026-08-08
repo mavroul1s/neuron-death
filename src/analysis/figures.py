@@ -730,7 +730,12 @@ def fig_gate_dose_response(ex: Extracts, out: Path) -> Optional[Path]:
         ids = base[base.lr == lr].run_id
         early = _score_matrix(tasks, ids, ex.window_early)
         late = _score_matrix(tasks, ids, ex.window_late)
-        drops.append((iqm(early) - iqm(late)) * 100)
+        # The frozen plan's gate statistic is the IQM of the *per-seed* drop
+        # (`gate.accuracy_criterion.statistic`), which is what `gate.py` computes
+        # and what the paper's gate table reports. Differencing two separately
+        # IQM'd windows -- what this line used to do -- trims different seeds out
+        # of each window and disagreed by up to 0.73 pp at the low learning rates.
+        drops.append(float(iqm(early.mean(axis=1) - late.mean(axis=1))) * 100)
         m = metrics[
             (metrics.run_id.isin(ids))
             & (metrics.probe_point == "task_end")
