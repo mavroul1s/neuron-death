@@ -255,11 +255,24 @@ rather than repeating it and colliding with the neighbouring panel's.
 not on this machine. `make_tikz.py` prints that rather than emitting an empty
 panel.
 
-The supporting material (pre-registration, gate, per-layer breakdown, figures,
-compute) is now **numbered sections 10–15 of the main body** rather than a
-lettered appendix; `\appendix` is not used. It sits **before** the back matter
-and the bibliography, because the paper closes with the references. Reverting to
-a conventional lettered appendix means moving that block after
-`\bibliography{refs}`, adding `\appendix` at its head, and changing the
-`Section~\ref{app:...}` cross-references back to `Appendix~\ref{...}`; the
-comment above the block says so.
+**There is no appendix and no supporting-material block.** Each piece went to the
+section that motivates it, rather than sitting in a slab at the back:
+
+| was | now |
+|---|---|
+| the frozen analysis plan | §4.3, verbatim, under "Pre-registration … and what was frozen" |
+| the reproduction gate | §4.4 — a manipulation check, so still not in Results |
+| per-layer decomposition | §5.2, beside the pooled-vs-per-layer argument it settles |
+| activation-sweep figure | §5.2, beside its own table |
+| optimizer figure | §5.5, beside its own table |
+| compute + logged data | §4.5, "Reproducibility, code, and compute" |
+
+The paper therefore runs Introduction → … → Conclusion → Reproducibility
+statement → References, and closes with the references. Acknowledgments removed.
+The two near-duplicate per-layer paragraphs that this move created were merged.
+
+**Reproducibility statement rewritten for the public repository.** It now points
+at `https://github.com/mavroul1s/neuron-death`, defined once as a `\repo` macro
+so the two citations of it cannot drift. Note the git remote still uses the
+pre-rename `neron-death` spelling, which redirects; the canonical name is the one
+in the paper.
