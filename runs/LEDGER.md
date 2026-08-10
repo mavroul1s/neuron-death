@@ -334,3 +334,35 @@ pointers: pruning dormant neurons does not affect performance (**their Figure 6*
 DQN on Atari; **Figure 19**, SAC on MuJoCo), and ReDo gives no gain in the
 over-parameterised low-dimensional regime (**their Appendix B**, where they
 attribute it to the network being "sufficiently over-parameterized").
+
+### 2026-08-08 — tables restyled, sharing the figures' palette
+
+All nine floated tables plus the two inline ones now use one style, in
+`paper/tex/tablestyle.tex`, keyed to the same palette as `tex/plotstyle.tex`.
+The point is that a colour carries the same meaning in a table as in a plot:
+blue = ReDo or the current probe, orange = random-matched or the reference probe,
+green = inverse-matched or a fired prediction, amber = a caveat. Table 1's row
+tints are literally the bar colours of Figures 5 and 10, and the caption says so.
+
+What it consists of: tinted header bands with the column heads in secondary ink;
+zebra stripes at 4% on the longer tables; a highlight tint on the rows the text
+singles out (the gate's `lr=0.1`, the two C3 anomalies, the calibrated `tanh`
+row, the pooled C4 revival rate); the palette used as emphasis on individual
+numbers instead of bare bold; rules recoloured to the palette's axis grey; and
+small filled "pills" for the verdict column of the results-summary table, so
+seven pre-registered outcomes can be scanned by colour before being read.
+
+Two implementation notes for anyone editing these:
+
+- `\usepackage[table]{xcolor}` must come **before** `\usepackage{tikz}`. Tikz
+  pulls in xcolor itself, so loading it afterwards with an option is an option
+  clash.
+- Striping is per-row (`\zrow`), not xcolor's automatic `\rowcolors`. Automatic
+  striping counts from the top of the tabular, which is wrong for the two tables
+  that stack header blocks, and it expands to a `\noalign` that LaTeX rejects
+  mid-tabular.
+
+**No number changed.** 62 distinct table values were re-checked against
+`paper/numbers.json` after the restyle and all 62 are still present in the PDF;
+the 58 figure coordinates still match; 153 tests pass; the build has no overfull
+boxes and no undefined references.
