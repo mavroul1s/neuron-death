@@ -276,3 +276,61 @@ at `https://github.com/mavroul1s/neuron-death`, defined once as a `\repo` macro
 so the two citations of it cannot drift. Note the git remote still uses the
 pre-rename `neron-death` spelling, which redirects; the canonical name is the one
 in the paper.
+
+### 2026-08-08 — citation audit: 8 bibliographic fixes, 4 claim fixes
+
+Every entry in `paper/refs.bib` re-checked against a primary source: arXiv's own
+metadata API for title/authors/journal_ref, dblp for publication venue, the
+publisher page for journal volume and pages. Two thirds of the bibliography is
+arXiv-sourced, and arXiv metadata moves, so this was worth doing properly.
+
+**Bibliographic corrections.**
+
+| entry | was | is |
+|---|---|---|
+| `kooi2024hadamard` | "Hadamard Representations: Augmenting Hyperbolic Tangents in RL" | **"Hadamard Representation: Scaffolding Performance Across Model-free RL"** — retitled twice since v1 |
+| `kumar2023maintaining` | arXiv preprint | **CoLLAs 2024** |
+| `whitaker2023synaptic` | arXiv preprint (its arXiv comment says only "Submitted to IJCNN-23") | **IJCNN 2023** |
+| `gulcehre2022empirical` | title expanded to "…Deep Offline Reinforcement Learning" | "…Deep Offline RL", as published; TMLR 2022 confirmed on dblp |
+| `abbas2023loss` | `@article` with a conference in `journal` | `@inproceedings` |
+| `lu2020dying` | no volume/pages | Commun. Comput. Phys. **28(5):1671–1706** |
+| `voita2024neurons` | no pages | Findings of ACL 2024, **1288–1301** |
+| three titles | `Boltzmann`, `ImageNet`, `Hadamard` lowercased by `tmlr.bst` | brace-protected |
+
+Confirmed **still preprints**, so cited correctly: `dohare2021continual`,
+`klein2024plasticity`, `berariu2021study`, `lewandowski2024directions`,
+`gao2024scaling`, `hernandezgarcia2025reinitializing`, `hendrycks2016gaussian`.
+
+**Claim corrections — four citations did not support what they were cited for.**
+
+1. **`kooi2024hadamard` was carrying a claim its current version does not make.**
+   The paper was cited for "tanh networks have *fewer* dormant units, *higher*
+   effective rank and *worse* performance, reversing the sign of the
+   correlation" — which came from `dead_neurons_related_work.md`, describing an
+   earlier version. The current v5 is a different paper (a method paper about the
+   Hadamard Representation across five algorithms) and its abstract makes a
+   different, more useful point: a dormant ReLU unit is effectively pruned,
+   whereas a **saturated tanh unit is not silent** — it turns its outgoing
+   weights into fixed biases and corrupts the layers downstream. Every one of the
+   four citation sites now carries that claim instead. The `saturated` row of the
+   definitions table also no longer credits the *definition* to them; it is ours,
+   on their observation.
+2. **`lewandowski2024directions` was credited with the average sign entropy of
+   pre-activations.** Not in the paper's abstract, and not verifiable; the
+   attribution came from the same working document. Now cited for the curvature
+   explanation and the distributional regulariser, which are.
+3. **`berariu2021study` was said to "question whether the capacity was ever
+   lost".** Their actual result is that a model pretrained on the same
+   distribution may not reach the generalisation of a freshly initialised one.
+   Reworded to that.
+4. **`gulcehre2022empirical` was described as "partly deflationary about how much
+   bootstrapping explains".** Their deflationary point is sharper and helps this
+   paper more: the rank–performance association holds only in restricted settings
+   and disappears under broader hyperparameter sweeps.
+
+**And one claim upgraded because it checked out.** The two Sokar et al. negative
+results the introduction leans on were verified in their full text and now carry
+pointers: pruning dormant neurons does not affect performance (**their Figure 6**,
+DQN on Atari; **Figure 19**, SAC on MuJoCo), and ReDo gives no gain in the
+over-parameterised low-dimensional regime (**their Appendix B**, where they
+attribute it to the network being "sufficiently over-parameterized").
