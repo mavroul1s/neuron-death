@@ -1,7 +1,8 @@
 """Recycling interventions and regularisers.
 
-Contains ReDo (Sokar et al. 2023), our size-matched random control, the
-inverse-matched sanity check, L2, and shrink-and-perturb.
+Contains ReDo (Sokar et al. 2023), Self-Normalized Resets (SNR; Farias &
+Jozefiak 2025), ReGraMa (Liu et al. 2025), our size-matched controls, L2, and
+shrink-and-perturb.
 
 Two things in here are load-bearing for the paper:
 
@@ -32,7 +33,14 @@ from . import probes
 from .probes import LayerProbe, ProbeConfig
 
 #: Recycling arms of the primary experiment (protocol §B.1).
-RECYCLE_KINDS = ("none", "redo", "random_matched", "inverse_matched")
+RECYCLE_KINDS = (
+    "none",
+    "redo",
+    "random_matched",
+    "inverse_matched",
+    "snr",
+    "regrama",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -215,12 +223,30 @@ class RecyclerConfig:
     score_batch_size: int = 64  # Sokar et al.'s default
     reset_optimizer_state: bool = True
     composition_on_reference: bool = True
+    # SNR implementation defaults from the authors' official Permuted-MNIST
+    # Colab. eta is the upper-tail rejection probability, so the corresponding
+    # inter-firing-time percentile is 1 - eta.
+    snr_eta: float = 0.08
+    snr_tau_max: int = 20_000
+    snr_update_every_tasks: int = 16
+    snr_expansion_factor: float = 2.0
+    snr_min_age: int = 100
 
     def __post_init__(self):
         if self.kind not in RECYCLE_KINDS:
             raise ValueError(f"unknown recycling kind {self.kind!r}; known: {RECYCLE_KINDS}")
         if self.freq <= 0:
             raise ValueError("recycling freq must be positive")
+        if not 0.0 < self.snr_eta < 1.0:
+            raise ValueError("snr_eta must be strictly between 0 and 1")
+        if self.snr_tau_max <= 0:
+            raise ValueError("snr_tau_max must be positive")
+        if self.snr_update_every_tasks <= 0:
+            raise ValueError("snr_update_every_tasks must be positive")
+        if self.snr_expansion_factor < 1.0:
+            raise ValueError("snr_expansion_factor must be at least 1")
+        if not 0 < self.snr_min_age <= self.snr_tau_max:
+            raise ValueError("snr_min_age must be in [1, snr_tau_max]")
 
     @classmethod
     def from_dict(cls, d: Optional[dict]) -> "RecyclerConfig":
@@ -232,6 +258,11 @@ class RecyclerConfig:
             score_batch_size=int(d.get("score_batch_size", 64)),
             reset_optimizer_state=bool(d.get("reset_optimizer_state", True)),
             composition_on_reference=bool(d.get("composition_on_reference", True)),
+            snr_eta=float(d.get("snr_eta", 0.08)),
+            snr_tau_max=int(d.get("snr_tau_max", 20_000)),
+            snr_update_every_tasks=int(d.get("snr_update_every_tasks", 16)),
+            snr_expansion_factor=float(d.get("snr_expansion_factor", 2.0)),
+            snr_min_age=int(d.get("snr_min_age", 100)),
         )
 
     def to_dict(self) -> dict:
@@ -242,6 +273,11 @@ class RecyclerConfig:
             "score_batch_size": self.score_batch_size,
             "reset_optimizer_state": self.reset_optimizer_state,
             "composition_on_reference": self.composition_on_reference,
+            "snr_eta": self.snr_eta,
+            "snr_tau_max": self.snr_tau_max,
+            "snr_update_every_tasks": self.snr_update_every_tasks,
+            "snr_expansion_factor": self.snr_expansion_factor,
+            "snr_min_age": self.snr_min_age,
         }
 
 
@@ -293,6 +329,14 @@ class Recycler:
         self._weight_gen.manual_seed(int(seed) ^ 0x5EED_1)
         self._select_rng = np.random.default_rng([int(seed), 0x5EED_2])
         self.event_idx = 0
+        # SNR state is kept on CPU.  Its histogram is sparse in the age axis:
+        # with a mini-batch implementation, observed ages are mostly multiples
+        # of batch size, so a dense H x 20,001 array would waste ~120 MB for the
+        # default MLP and bloat every checkpoint.
+        self._snr_ages: List[np.ndarray] = []
+        self._snr_thresholds: List[np.ndarray] = []
+        self._snr_hist: List[Dict[int, np.ndarray]] = []
+        self._snr_pending: List[np.ndarray] = []
 
     @property
     def enabled(self) -> bool:
@@ -301,7 +345,117 @@ class Recycler:
     def due(self, step: int) -> bool:
         """True on steps 1000, 2000, ... (never on step 0: an event before any
         training would recycle the initialisation itself)."""
+        if self.cfg.kind == "snr":
+            return step > 0 and any(np.any(mask) for mask in self._snr_pending)
         return self.enabled and step > 0 and step % self.cfg.freq == 0
+
+    @property
+    def needs_training_activations(self) -> bool:
+        """Whether the training forward must expose hidden activations."""
+        return self.cfg.kind == "snr"
+
+    def _initialize_snr(self, widths: Sequence[int]) -> None:
+        self._snr_ages = [np.zeros(int(h), dtype=np.int64) for h in widths]
+        self._snr_thresholds = [
+            np.full(int(h), self.cfg.snr_tau_max, dtype=np.int64) for h in widths
+        ]
+        self._snr_hist = [{} for _ in widths]
+        self._snr_pending = [np.zeros(int(h), dtype=bool) for h in widths]
+
+    def _snr_add_intervals(
+        self, layer_idx: int, ages: np.ndarray, mask: np.ndarray
+    ) -> None:
+        """Add completed/censored inter-firing intervals to the sparse histogram."""
+        idx = np.flatnonzero(mask & (ages > 0))
+        if idx.size == 0:
+            return
+        hist = self._snr_hist[layer_idx]
+        clipped = np.minimum(ages[idx], self.cfg.snr_tau_max)
+        for age in np.unique(clipped):
+            age_i = int(age)
+            counts = hist.setdefault(
+                age_i, np.zeros(ages.size, dtype=np.int64)
+            )
+            counts[idx[clipped == age]] += 1
+
+    @torch.no_grad()
+    def observe_activations(self, posts: Sequence[torch.Tensor]) -> None:
+        """Update SNR inter-firing ages from one training mini-batch.
+
+        This follows the released implementation: a unit fires if it is
+        positive for at least one example (and, for a convolutional channel,
+        at least one spatial position) in the mini-batch.  A non-firing unit's
+        age increases by the number of examples in that mini-batch.
+        """
+        if self.cfg.kind != "snr":
+            return
+        widths = [int(probes.as_unit_matrix(p).shape[1]) for p in posts]
+        if not self._snr_ages:
+            self._initialize_snr(widths)
+        if widths != [int(a.size) for a in self._snr_ages]:
+            raise ValueError("SNR state does not match the model's hidden widths")
+
+        for layer_idx, post in enumerate(posts):
+            units = probes.as_unit_matrix(post.detach())
+            fired = (units > 0).any(dim=0).cpu().numpy().astype(bool, copy=False)
+            ages = self._snr_ages[layer_idx]
+            self._snr_add_intervals(layer_idx, ages, fired)
+            ages[fired] = 0
+            ages[~fired] += int(post.shape[0])
+            self._snr_pending[layer_idx] = ages >= self._snr_thresholds[layer_idx]
+
+    def end_task(self, task_idx: int) -> None:
+        """Update SNR's neuron-specific thresholds at the official cadence."""
+        if self.cfg.kind != "snr" or not self._snr_ages:
+            return
+        if (int(task_idx) + 1) % self.cfg.snr_update_every_tasks != 0:
+            return
+
+        percentile = 1.0 - self.cfg.snr_eta
+        for layer_idx, ages in enumerate(self._snr_ages):
+            hist = self._snr_hist[layer_idx]
+            total = np.zeros(ages.size, dtype=np.int64)
+            for counts in hist.values():
+                total += counts
+            target = percentile * total
+            cumulative = np.zeros(ages.size, dtype=np.int64)
+            quantile = np.ones(ages.size, dtype=np.int64)
+            unresolved = total > 0
+            for age, counts in sorted(hist.items()):
+                cumulative += counts
+                hit = unresolved & (cumulative >= target)
+                quantile[hit] = int(age)
+                unresolved[hit] = False
+
+            old = self._snr_thresholds[layer_idx]
+            updated = np.where(
+                quantile < old,
+                quantile,
+                np.ceil(self.cfg.snr_expansion_factor * old).astype(np.int64),
+            )
+            self._snr_thresholds[layer_idx] = np.clip(
+                updated, self.cfg.snr_min_age, self.cfg.snr_tau_max
+            ).astype(np.int64)
+            self._snr_hist[layer_idx] = {}
+            self._snr_pending[layer_idx] = (
+                ages >= self._snr_thresholds[layer_idx]
+            )
+
+    @staticmethod
+    def _grama_scores(model) -> List[np.ndarray]:
+        """Eq. 2 / official ReGraMa implementation, one score per hidden unit."""
+        out: List[np.ndarray] = []
+        for layer_idx in range(model.n_hidden):
+            grad = model.incoming_linear(layer_idx).weight.grad
+            if grad is None:
+                h = int(model.hidden_dims[layer_idx])
+                out.append(np.full(h, np.inf, dtype=np.float64))
+                continue
+            reduce_dims = tuple(range(1, grad.ndim))
+            magnitude = grad.detach().abs().mean(dim=reduce_dims)
+            normalized = magnitude / (magnitude.mean() + 1e-9)
+            out.append(normalized.to(torch.float64).cpu().numpy())
+        return out
 
     @torch.no_grad()
     def run_event(
@@ -330,6 +484,9 @@ class Recycler:
                 .numpy()
                 for p in score_posts
             ]
+            grama_scores = (
+                self._grama_scores(model) if self.cfg.kind == "regrama" else None
+            )
 
             # 2. Composition, from the full probe batch, BEFORE any weights move.
             # compute_erank=False: the composition table does not use effective
@@ -346,9 +503,28 @@ class Recycler:
             result = EventResult(event_idx=self.event_idx, step=step, task_idx=task_idx)
 
             for layer_idx, scores in enumerate(layer_scores):
-                selected, dormant = select_recycle_indices(
-                    self.cfg.kind, scores, self.cfg.tau, self._select_rng
-                )
+                dormant = np.flatnonzero(scores <= self.cfg.tau).astype(np.int64)
+                method_scores = scores
+                method_threshold = self.cfg.tau
+                selection_metric = "sokar_activation"
+                if self.cfg.kind == "regrama":
+                    assert grama_scores is not None
+                    method_scores = grama_scores[layer_idx]
+                    selected = np.flatnonzero(method_scores <= self.cfg.tau).astype(
+                        np.int64
+                    )
+                    selection_metric = "grama_gradient"
+                elif self.cfg.kind == "snr":
+                    selected = np.flatnonzero(self._snr_pending[layer_idx]).astype(
+                        np.int64
+                    )
+                    method_scores = self._snr_ages[layer_idx].astype(np.float64)
+                    method_threshold = float("nan")  # neuron-specific thresholds
+                    selection_metric = "snr_inter_firing_age"
+                else:
+                    selected, dormant = select_recycle_indices(
+                        self.cfg.kind, scores, self.cfg.tau, self._select_rng
+                    )
                 comp = probes.composition(cur_probes[layer_idx], selected)
                 row = {
                     "run_id": self.run_id,
@@ -362,6 +538,12 @@ class Recycler:
                     "n_neurons": int(scores.size),
                     "n_dormant": int(dormant.size),
                     "score_batch_size": int(score_x.shape[0]),
+                    "selection_metric": selection_metric,
+                    "selection_threshold": method_threshold,
+                    "mean_selection_score_selected": (
+                        float(method_scores[selected].mean())
+                        if selected.size else float("nan")
+                    ),
                     # Mean Sokar score over the *dormant* set on the selection
                     # batch, for reference; the headline number is the mean
                     # score of the neurons actually recycled, below.
@@ -369,6 +551,19 @@ class Recycler:
                         float(scores[dormant].mean()) if dormant.size else float("nan")
                     ),
                 }
+                if self.cfg.kind == "snr":
+                    thresholds = self._snr_thresholds[layer_idx]
+                    row.update(
+                        {
+                            "snr_eta": self.cfg.snr_eta,
+                            "snr_mean_threshold_selected": (
+                                float(thresholds[selected].mean())
+                                if selected.size else float("nan")
+                            ),
+                            "snr_min_threshold_layer": int(thresholds.min()),
+                            "snr_max_threshold_layer": int(thresholds.max()),
+                        }
+                    )
                 row.update(comp.as_dict())
                 if ref_probes is not None:
                     row.update(
@@ -385,6 +580,15 @@ class Recycler:
                     optimizer=optimizer,
                     reset_optimizer_state=self.cfg.reset_optimizer_state,
                 )
+                if self.cfg.kind == "snr" and selected.size:
+                    ages = self._snr_ages[layer_idx]
+                    mask = np.zeros(ages.size, dtype=bool)
+                    mask[selected] = True
+                    # A reset terminates the current (right-censored) interval,
+                    # exactly as in the released implementation.
+                    self._snr_add_intervals(layer_idx, ages, mask)
+                    ages[selected] = 0
+                    self._snr_pending[layer_idx][selected] = False
                 result.recycled[layer_idx] = selected
 
             self.event_idx += 1
@@ -396,16 +600,37 @@ class Recycler:
     # -- checkpointing --------------------------------------------------------
 
     def state_dict(self) -> dict:
-        return {
+        state = {
             "event_idx": self.event_idx,
             "weight_gen": self._weight_gen.get_state(),
             "select_rng": self._select_rng.bit_generator.state,
         }
+        if self.cfg.kind == "snr":
+            state["snr"] = {
+                "ages": self._snr_ages,
+                "thresholds": self._snr_thresholds,
+                "hist": self._snr_hist,
+                "pending": self._snr_pending,
+            }
+        return state
 
     def load_state_dict(self, state: dict) -> None:
         self.event_idx = int(state["event_idx"])
         self._weight_gen.set_state(state["weight_gen"])
         self._select_rng.bit_generator.state = state["select_rng"]
+        snr = state.get("snr")
+        if snr is not None:
+            self._snr_ages = [np.asarray(x, dtype=np.int64) for x in snr["ages"]]
+            self._snr_thresholds = [
+                np.asarray(x, dtype=np.int64) for x in snr["thresholds"]
+            ]
+            self._snr_hist = [
+                {int(age): np.asarray(v, dtype=np.int64) for age, v in h.items()}
+                for h in snr["hist"]
+            ]
+            self._snr_pending = [
+                np.asarray(x, dtype=bool) for x in snr["pending"]
+            ]
 
 
 # ---------------------------------------------------------------------------

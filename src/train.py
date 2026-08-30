@@ -242,7 +242,13 @@ class Trainer:
             self._intra_task_probe(task_idx, step_in_task, probe_x)
 
         for xb, yb in ds.task_batches(task_idx):
-            logits = model(xb)
+            if self.recycler.needs_training_activations:
+                logits, _, train_posts = model.forward_with_activations(xb)
+                self.recycler.observe_activations(train_posts)
+            else:
+                # Keep the established arms on their original execution path;
+                # adding SNR must not perturb existing ReDo/control runs.
+                logits = model(xb)
             with torch.no_grad():
                 # Online accuracy: the prediction the network makes on each
                 # example *before* being trained on it (Dohare et al.'s online
@@ -305,6 +311,11 @@ class Trainer:
             mean_loss=mean_loss,
             task_wall_s=time.perf_counter() - t0,
         )
+
+        # The released SNR implementation updates its neuron-specific
+        # inter-firing thresholds at a task cadence (16 tasks by default),
+        # after all examples and resets from the task have been processed.
+        self.recycler.end_task(task_idx)
 
         # Applied after the boundary measurement so the logged row describes the
         # network this task produced.
