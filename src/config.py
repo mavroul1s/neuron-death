@@ -68,7 +68,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "include_bias": True,
     },
     "recycling": {
-        "kind": "none",  # none | redo | random_matched | inverse_matched
+        # none | redo | random_matched | inverse_matched | snr | regrama
+        "kind": "none",
         "tau": 0.0,
         "freq": 1000,
         "score_batch_size": 64,

@@ -36,8 +36,10 @@ The implementation follows the authors' official Permuted-MNIST Colab defaults:
 - minimum threshold: 100 examples.
 
 The released code stores a dense histogram. This implementation stores the
-same counts in a sparse age-indexed histogram, which is statistically identical
-but keeps checkpoints practical for the 3×500-unit MLP.
+same in-range counts in a sparse age-indexed histogram, which keeps checkpoints
+practical for the 3×500-unit MLP. If a mini-batch crosses the 20,000-example
+cap (possible because 20,000 is not divisible by this project's batch size
+128), the censored interval is recorded at the cap rather than discarded.
 
 Primary sources: [ICLR 2025 paper](https://proceedings.iclr.cc/paper_files/paper/2025/file/359c0c4dc53b6bf64041b4c8334f1c11-Paper-Conference.pdf),
 [official implementation](https://github.com/ajozefiak/SelfNormalizedResets).
@@ -79,4 +81,3 @@ number of resets, reset count by layer, and the composition of the selected set
 under the project's common dead/dormant definitions. ReGraMa was introduced in
 deep RL, so its result here is evidence about transfer to continual supervised
 learning, not a direct reproduction of its benchmark claims.
-
