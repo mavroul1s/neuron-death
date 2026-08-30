@@ -6,8 +6,10 @@ Research code for a single analysis paper on dead and dormant neurons in continu
 learning. This is not a method paper — we are not proposing a new algorithm, and
 correctness of measurement matters more here than performance or speed.
 
-**Status: all experiments complete.** 335 runs, ~62 GPU-hours, 153 tests, 9 figures.
-Every claim has data. What remains is writing.
+**Status:** the original measurement study is complete (335 runs, ~62 GPU-hours,
+153 tests, 9 figures). The supervisor-requested extension with two published
+neuron-focused methods has been implemented; its 15 Kaggle runs are pending.
+See [`docs/NEURON_METHODS.md`](docs/NEURON_METHODS.md).
 
 ---
 
