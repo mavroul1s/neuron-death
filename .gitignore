@@ -1,11 +1,7 @@
 /CLAUDE.md
 /protocol_weeks_1_2_v2.md
 
-<<<<<<< HEAD
 
-=======
-*.pdf
->>>>>>> 63fd61cda22d2890532245623520d428a01eead8
 
 # Run outputs. Results live in a versioned Kaggle Dataset, not in git
 # (CLAUDE.md §3). runs/LEDGER.md is the exception -- it is the compute appendix.
@@ -36,4 +32,4 @@ kaggle_upload/
 # all reproducible from this repo (`bash paper/build.sh`), so committing them
 # would add churn without adding information.
 paper/*
-
+!paper/recycling_the_living.pdf
