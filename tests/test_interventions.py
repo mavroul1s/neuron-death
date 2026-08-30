@@ -267,6 +267,89 @@ def test_recycler_state_round_trips(gen):
 
 
 # ---------------------------------------------------------------------------
+# Published neuron-focused alternatives: ReGraMa and SNR
+# ---------------------------------------------------------------------------
+
+
+def test_regrama_uses_normalized_incoming_weight_gradient_magnitude(gen):
+    """GraMa is mean |grad| per output unit, normalized by the layer mean."""
+    model = make_model(gen, hidden=(4,), in_features=3, out_features=2)
+    grad = torch.tensor(
+        [[0.0, 0.0, 0.0], [1.0, -1.0, 1.0], [2.0, -2.0, 2.0], [1.0, 1.0, 1.0]]
+    )
+    model.incoming_linear(0).weight.grad = grad
+
+    scores = Recycler._grama_scores(model)[0]
+    assert np.allclose(scores, np.array([0.0, 1.0, 2.0, 1.0]), atol=1e-8)
+
+    x = torch.rand(32, 3, generator=gen)
+    result = Recycler(
+        RecyclerConfig(kind="regrama", tau=0.01, freq=1), seed=7
+    ).run_event(model, None, score_x=x, probe_x=x, step=1, task_idx=0)
+    assert result.recycled[0].tolist() == [0]
+    assert result.rows[0]["selection_metric"] == "grama_gradient"
+    assert torch.all(model.outgoing_linear(0).weight[:, 0] == 0.0)
+
+
+def test_snr_resets_when_neuron_specific_inter_firing_age_reaches_threshold(gen):
+    model = make_model(gen, hidden=(3,), in_features=3, out_features=2)
+    cfg = RecyclerConfig(
+        kind="snr", snr_tau_max=4, snr_min_age=2, snr_update_every_tasks=1
+    )
+    recycler = Recycler(cfg, seed=5)
+
+    # Unit 1 never fires. The official mini-batch estimator increments its age
+    # by batch size (2), so it reaches the initial threshold after two batches.
+    posts = [torch.tensor([[1.0, 0.0, 1.0], [1.0, 0.0, 1.0]])]
+    recycler.observe_activations(posts)
+    assert not recycler.due(1)
+    recycler.observe_activations(posts)
+    assert recycler.due(2)
+
+    x = torch.rand(16, 3, generator=gen)
+    result = recycler.run_event(
+        model, None, score_x=x, probe_x=x, step=2, task_idx=0
+    )
+    assert result.recycled[0].tolist() == [1]
+    assert recycler._snr_ages[0].tolist() == [0, 0, 0]
+    assert result.rows[0]["selection_metric"] == "snr_inter_firing_age"
+    assert not recycler.due(2)
+
+
+def test_snr_threshold_update_uses_own_inter_firing_histogram(gen):
+    cfg = RecyclerConfig(
+        kind="snr",
+        snr_eta=0.5,
+        snr_tau_max=20,
+        snr_min_age=2,
+        snr_update_every_tasks=1,
+    )
+    recycler = Recycler(cfg, seed=1)
+    # Unit 0 produces two completed intervals of length 2; unit 1 always fires
+    # and therefore has no positive interval in the histogram.
+    recycler.observe_activations([torch.tensor([[0.0, 1.0], [0.0, 1.0]])])
+    recycler.observe_activations([torch.tensor([[1.0, 1.0], [1.0, 1.0]])])
+    recycler.observe_activations([torch.tensor([[0.0, 1.0], [0.0, 1.0]])])
+    recycler.observe_activations([torch.tensor([[1.0, 1.0], [1.0, 1.0]])])
+    recycler.end_task(0)
+    assert recycler._snr_thresholds[0].tolist() == [2, 2]
+    assert recycler._snr_hist[0] == {}
+
+
+def test_snr_state_round_trips(gen):
+    cfg = RecyclerConfig(kind="snr", snr_tau_max=20, snr_min_age=2)
+    r1 = Recycler(cfg, seed=9)
+    r1.observe_activations([torch.tensor([[0.0, 1.0], [0.0, 1.0]])])
+    state = r1.state_dict()
+
+    r2 = Recycler(cfg, seed=9)
+    r2.load_state_dict(state)
+    assert np.array_equal(r2._snr_ages[0], r1._snr_ages[0])
+    assert np.array_equal(r2._snr_thresholds[0], r1._snr_thresholds[0])
+    assert r2._snr_hist[0].keys() == r1._snr_hist[0].keys()
+
+
+# ---------------------------------------------------------------------------
 # L2 and shrink-and-perturb
 # ---------------------------------------------------------------------------
 
