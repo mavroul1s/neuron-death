@@ -228,6 +228,51 @@ def c5_optimizer(lr: float) -> list:
     return out
 
 
+def neuron_methods(lr: float) -> list:
+    """Professor-requested comparison of neuron-focused reset techniques.
+
+    This is deliberately a small, paired 3-arm experiment, not a new-method
+    claim: ReDo is the established reference, SNR is the firing-history method,
+    and ReGraMa is the gradient-magnitude method.  The no-intervention baseline
+    already exists for these exact seeds/settings in the completed tau sweep.
+    """
+    out = []
+    arms = {
+        "redo_t0p1": {
+            "kind": "redo",
+            "tau": 0.1,
+            "freq": 1000,
+            "score_batch_size": 64,
+        },
+        "snr_eta0p08": {
+            "kind": "snr",
+            "score_batch_size": 64,
+            "snr_eta": 0.08,
+            "snr_tau_max": 20_000,
+            "snr_update_every_tasks": 16,
+            "snr_expansion_factor": 2.0,
+            "snr_min_age": 100,
+        },
+        "regrama_t0p01": {
+            "kind": "regrama",
+            "tau": 0.01,
+            "freq": 1000,
+            "score_batch_size": 64,
+        },
+    }
+    for seed in range(5):
+        for name, recycling in arms.items():
+            rid = f"methods_{name}_lr{lr:g}_s{seed}".replace(".", "p")
+            cfg = _base(rid, seed, lr)
+            cfg["recycling"] = recycling
+            cfg["notes"] = (
+                f"Published neuron-focused method comparison, arm {name}; "
+                "requested as the next step before considering a new method."
+            )
+            out.append(cfg)
+    return out
+
+
 def eps_sweep(lr: float) -> list:
     """§B.4 demoted epsilon sweep: ReLU vs LeakyReLU dose-response."""
     out = []
@@ -403,6 +448,7 @@ EXPERIMENTS = {
     "tau_sweep": tau_sweep,
     "c3": c3_anomaly,
     "c5": c5_optimizer,
+    "neuron_methods": neuron_methods,
     "eps": eps_sweep,
     # CLAUDE.md §9 replacements for the cancelled transformer arm.
     "setting2": setting2_cifar_cnn,
