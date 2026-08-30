@@ -31,6 +31,23 @@ ROOT = Path(__file__).resolve().parents[1]
 #: not dependency -- there are no dependencies.
 JOBS = [
     {
+        "name": "neuron_methods",
+        "experiment": "neuron_methods",
+        "globs": ["*.json"],
+        "pattern": "methods_*",
+        "is_gate": False,
+        "runs": 15,
+        "hours": None,
+        "why": (
+            "The professor-requested next step: compare ReDo with two published "
+            "techniques that act directly on inactive neurons. SNR uses each "
+            "unit's inter-firing-time history; ReGraMa uses normalized gradient "
+            "magnitude. Five paired seeds per arm, on the established Permuted-"
+            "MNIST setting. Runtime is left unestimated until the smoke test "
+            "because SNR's reset count is data-adaptive."
+        ),
+    },
+    {
         "name": "tau_a_none_redo",
         "experiment": "tau_sweep",
         "globs": ["tau_none_*.json", "tau_redo_*.json"],
