@@ -80,7 +80,7 @@ Two files in this folder. They go to two DIFFERENT places on Kaggle.
     UPLOAD THIS FIRST, and re-upload it whenever the code or configs change.
 
 
-2_*.ipynb ... 7_*.ipynb   -- one notebook per experiment
+2_*.ipynb ... 11_*.ipynb  -- one notebook per experiment
     -> https://www.kaggle.com/code   ("New Notebook" -> File -> Import Notebook)
 
     These are INDEPENDENT. No experiment reads another's output and every
@@ -88,12 +88,16 @@ Two files in this folder. They go to two DIFFERENT places on Kaggle.
     time in separate sessions. Nothing inside them needs editing.
 
     Priority order if you run them one at a time:
-      2_tau_a_none_redo        <- run this one first if you run only one
-      3_tau_b_random_matched
-      4_setting3_activations
-      5_c5_optimizers
-      6_tau_c_inverse_matched
-      7_setting2_cifar_cnn     <- blocked, see below
+      2_neuron_methods         <- current professor-requested next step
+      3_tau_a_none_redo
+      4_tau_b_random_matched
+      5_setting3_activations
+      6_c5_optimizers
+      7_tau_c_inverse_matched
+      8_c3_anomaly
+      9_setting3_tanh_gate
+      10_setting2_gate
+      11_setting2_cifar_cnn    <- needs CIFAR-10, see below
 
 
 THEN, in each notebook:
@@ -108,7 +112,7 @@ PRE-FLIGHT CHECK (built in)
     step 1 rather than letting the sweep run.
 
 
-7_setting2_cifar_cnn NEEDS A SECOND DATASET
+11_setting2_cifar_cnn NEEDS A SECOND DATASET
     It runs on CIFAR-10. Do NOT download or upload it -- search Kaggle for
     "CIFAR-10 python" and attach any public one as a second Input. src/data.py
     reads all three layouts these come in:
