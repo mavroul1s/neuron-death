@@ -11,9 +11,9 @@ Writes `dist/neuron-death-code.zip` containing only what a run needs, with the
 repository contents at the **root** of the archive so the notebook's dataset
 discovery finds `src/train.py` one level down rather than three.
 
-Excluded: `__pycache__`, `.git`, caches, `runs/` (results live in their own
-versioned Dataset), `data/` (uploaded separately -- it is 55 MB of MNIST and
-changes never).
+Excluded: `__pycache__`, `.git`, caches, assistant-local files, the manuscript,
+`runs/` (results live in their own versioned Dataset), and raw `data/` files.
+The compact `data/mnist.npz` exception is bundled so the upload is standalone.
 """
 
 from __future__ import annotations
@@ -28,6 +28,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 EXCLUDE_DIRS = {
     "__pycache__",
+    ".agents",
+    ".claude",
+    ".codex",
     ".git",
     ".pytest_cache",
     ".mypy_cache",
@@ -35,10 +38,18 @@ EXCLUDE_DIRS = {
     ".venv",
     "venv",
     "dist",
+    "kaggle_upload",
+    "paper",
     "runs",
     "data",
 }
-EXCLUDE_SUFFIXES = {".pyc", ".pyo", ".zip", ".parquet", ".pt"}
+EXCLUDE_SUFFIXES = {".pyc", ".pyo", ".zip", ".parquet", ".pt", ".tex"}
+EXCLUDE_FILES = {
+    Path("AGENTS.md"),
+    Path("CLAUDE.md"),
+    Path("docs/NEURON_METHODS.md"),
+    Path("protocol_weeks_1_2_v2.md"),
+}
 
 #: Kept despite their directories being excluded.
 #:
@@ -57,6 +68,8 @@ def _wanted(path: Path) -> bool:
     rel = path.relative_to(ROOT)
     if rel in FORCE_INCLUDE:
         return True
+    if rel in EXCLUDE_FILES:
+        return False
     if any(part in EXCLUDE_DIRS for part in rel.parts):
         return False
     if path.suffix in EXCLUDE_SUFFIXES:
