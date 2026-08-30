@@ -35,6 +35,11 @@ JOBS = [
         "experiment": "neuron_methods",
         "globs": ["*.json"],
         "pattern": "methods_*",
+        # SNR is data-adaptive and potentially the slowest arm. Measure it in
+        # the one-run smoke test instead of the alphabetically first ReDo run,
+        # so the printed 2-GPU estimate is conservative and useful for the
+        # 12-hour Kaggle cap.
+        "smoke_glob": "methods_snr_eta0p08_lr0p1_s0.json",
         "is_gate": False,
         "runs": 15,
         "hours": None,
@@ -223,6 +228,14 @@ def build(job: dict, template: dict) -> dict:
     else:
         data_line = 'DATA = DATA_MNIST\nassert DATA, "MNIST not found in the code dataset"'
 
+    smoke_pick = (
+        f'''_smoke_matches = glob.glob(f"{{REPO}}/configs/{{EXPERIMENT}}/{job["smoke_glob"]}")
+assert len(_smoke_matches) == 1, "expected exactly one configured smoke-test run"
+smoke_config = _smoke_matches[0]'''
+        if job.get("smoke_glob")
+        else "smoke_config = configs[0]"
+    )
+
     _find_cell(nb, "EXPERIMENT =")["source"] = _as_source(
         f'''import time
 
@@ -244,6 +257,8 @@ assert len(configs) == EXPECTED_RUNS, (
     "is probably an older version -- re-upload before running the sweep."
 )
 print(f"{{EXPERIMENT}}: {{len(configs)}} configs -- as expected")
+{smoke_pick}
+print(f"smoke-test config: {{Path(smoke_config).name}}")
 
 # Smoke-test as a SUBPROCESS, never in this kernel. A Trainer run here keeps its
 # CUDA allocations for the life of the session, and the next cell then launches
@@ -251,7 +266,7 @@ print(f"{{EXPERIMENT}}: {{len(configs)}} configs -- as expected")
 # probing 2048 images holds far more memory than the MLPs ever did.
 _t0 = time.perf_counter()
 subprocess.run(
-    [sys.executable, "-m", "src.train", "--config", configs[0],
+    [sys.executable, "-m", "src.train", "--config", smoke_config,
      "--runs-root", RUNS, "--data-root", DATA, "--device", "cuda"],
     cwd=REPO, check=True,
 )
