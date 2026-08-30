@@ -1,0 +1,36 @@
+{
+  "device": "auto",
+  "data": {
+    "batch_size": 128,
+    "n_tasks": 200,
+    "name": "permuted_mnist",
+    "root": "data"
+  },
+  "model": {
+    "activation": "relu",
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "init": "kaiming_uniform"
+  },
+  "notes": "Published neuron-focused method comparison, arm snr_eta0p08; requested as the next step before considering a new method.",
+  "optim": {
+    "lr": 0.1,
+    "momentum": 0.9,
+    "name": "sgd"
+  },
+  "recycling": {
+    "kind": "snr",
+    "score_batch_size": 64,
+    "snr_eta": 0.08,
+    "snr_tau_max": 20000,
+    "snr_update_every_tasks": 16,
+    "snr_expansion_factor": 2,
+    "snr_min_age": 100
+  },
+  "run_id": "methods_snr_eta0p08_lr0p1_s2",
+  "seed": 2
+}
+

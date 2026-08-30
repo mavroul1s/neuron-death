@@ -1,0 +1,33 @@
+{
+  "device": "auto",
+  "data": {
+    "batch_size": 128,
+    "n_tasks": 200,
+    "name": "permuted_mnist",
+    "root": "data"
+  },
+  "model": {
+    "activation": "relu",
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "init": "kaiming_uniform"
+  },
+  "notes": "Published neuron-focused method comparison, arm redo_t0p1; requested as the next step before considering a new method.",
+  "optim": {
+    "lr": 0.1,
+    "momentum": 0.9,
+    "name": "sgd"
+  },
+  "recycling": {
+    "kind": "redo",
+    "tau": 0.1,
+    "freq": 1000,
+    "score_batch_size": 64
+  },
+  "run_id": "methods_redo_t0p1_lr0p1_s2",
+  "seed": 2
+}
+
