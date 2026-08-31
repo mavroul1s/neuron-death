@@ -366,3 +366,17 @@ Two implementation notes for anyone editing these:
 `paper/numbers.json` after the restyle and all 62 are still present in the PDF;
 the 58 figure coordinates still match; 153 tests pass; the build has no overfull
 boxes and no undefined references.
+
+### 2026-08-30 — published neuron-focused methods extension
+
+The supervisor-requested comparison of ReDo (`tau=0.1`), ReGraMa (`tau=0.01`),
+and SNR (`eta=0.08`) completed successfully: 15/15 runs, five paired seeds per
+method, 200 tasks per run, no failures, and **3.67 GPU-hours**. The complete
+session ledger and analysis-ready extracts are in `results/neuron_methods/`;
+`full_results.zip` preserves every run, checkpoint, and per-neuron log through
+Git LFS.
+
+The repeated ReDo arm reproduced the earlier `tau_redo_t0p1` task-level
+accuracy, loss, probe accuracy, reference-probe accuracy, and reset counts
+bit-for-bit. No additional GPU run is needed before reporting this extension to
+the supervisor.

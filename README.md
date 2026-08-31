@@ -7,9 +7,11 @@ learning. This is not a method paper — we are not proposing a new algorithm, a
 correctness of measurement matters more here than performance or speed.
 
 **Status:** the original measurement study is complete (335 runs, ~62 GPU-hours,
-153 tests, 9 figures). The supervisor-requested extension with two published
-neuron-focused methods has been implemented; its 15 Kaggle runs are pending.
-See [`docs/NEURON_METHODS.md`](docs/NEURON_METHODS.md).
+153 tests, 9 figures). The supervisor-requested extension comparing ReDo with
+SNR and ReGraMa is also complete: 15/15 Kaggle runs, 200 tasks each, 5 paired
+seeds per method, and 3.67 GPU-hours. Its analysis-ready tables, C4 per-neuron
+extract, session ledger, and complete Git-LFS archive are under
+[`results/neuron_methods/`](results/neuron_methods/).
 
 ---
 
@@ -225,6 +227,12 @@ neuron-death/
 │   └── update_ledger.py         regenerates runs/LEDGER.md
 │
 ├── tests/                       153 tests, synthetic data, ~24 s
+├── results/
+│   └── neuron_methods/
+│       ├── extract/            analysis-ready task/metric/recycling tables
+│       ├── c4/                 slim per-neuron C4 extract plus analysis tables
+│       ├── LEDGER.md           the 15-run session ledger
+│       └── full_results.zip    all runs and checkpoints (Git LFS)
 ├── runs/
 │   ├── LEDGER.md                run ledger / compute appendix
 │   └── _extracts/               per-session analysis extracts
