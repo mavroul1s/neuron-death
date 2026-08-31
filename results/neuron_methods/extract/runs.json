@@ -1,0 +1,1707 @@
+[
+  {
+    "run_id": "methods_redo_t0p1_lr0p1_s0",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 0
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm redo_t0p1; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "redo",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.1
+      },
+      "run_id": "methods_redo_t0p1_lr0p1_s0",
+      "seed": 0,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_redo_t0p1_lr0p1_s0",
+      "config_hash": "2d43bc9372926017",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 789.3002163149993,
+      "gpu_hours": 0.21925006008749978,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s0/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s0/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s0/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s0/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9245416666666666,
+      "first_10_task_online_accuracy": 0.92527
+    }
+  },
+  {
+    "run_id": "methods_redo_t0p1_lr0p1_s1",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 1
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm redo_t0p1; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "redo",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.1
+      },
+      "run_id": "methods_redo_t0p1_lr0p1_s1",
+      "seed": 1,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_redo_t0p1_lr0p1_s1",
+      "config_hash": "f24700cd473b2832",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 789.6534290769991,
+      "gpu_hours": 0.21934817474361087,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s1/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s1/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s1/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s1/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.92563,
+      "first_10_task_online_accuracy": 0.9259016666666667
+    }
+  },
+  {
+    "run_id": "methods_redo_t0p1_lr0p1_s2",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 2
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm redo_t0p1; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "redo",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.1
+      },
+      "run_id": "methods_redo_t0p1_lr0p1_s2",
+      "seed": 2,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_redo_t0p1_lr0p1_s2",
+      "config_hash": "947d1034582948f4",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 783.6248925900004,
+      "gpu_hours": 0.2176735812750001,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s2/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s2/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s2/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s2/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9240383333333334,
+      "first_10_task_online_accuracy": 0.9266283333333334
+    }
+  },
+  {
+    "run_id": "methods_redo_t0p1_lr0p1_s3",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 3
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm redo_t0p1; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "redo",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.1
+      },
+      "run_id": "methods_redo_t0p1_lr0p1_s3",
+      "seed": 3,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_redo_t0p1_lr0p1_s3",
+      "config_hash": "e06f781fd06801cd",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 778.3738611150006,
+      "gpu_hours": 0.21621496142083352,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s3/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s3/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s3/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s3/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9263450000000001,
+      "first_10_task_online_accuracy": 0.9258849999999998
+    }
+  },
+  {
+    "run_id": "methods_redo_t0p1_lr0p1_s4",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 4
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm redo_t0p1; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "redo",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.1
+      },
+      "run_id": "methods_redo_t0p1_lr0p1_s4",
+      "seed": 4,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_redo_t0p1_lr0p1_s4",
+      "config_hash": "05105cf0301a1855",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 783.2306868450005,
+      "gpu_hours": 0.2175640796791668,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s4/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s4/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s4/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_redo_t0p1_lr0p1_s4/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9259283333333335,
+      "first_10_task_online_accuracy": 0.9251716666666667
+    }
+  },
+  {
+    "run_id": "methods_regrama_t0p01_lr0p1_s0",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 0
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm regrama_t0p01; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "regrama",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.01
+      },
+      "run_id": "methods_regrama_t0p01_lr0p1_s0",
+      "seed": 0,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_regrama_t0p01_lr0p1_s0",
+      "config_hash": "43abbe1dda082388",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 772.4032080239999,
+      "gpu_hours": 0.21455644667333332,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s0/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s0/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s0/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s0/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9257766666666667,
+      "first_10_task_online_accuracy": 0.9243433333333334
+    }
+  },
+  {
+    "run_id": "methods_regrama_t0p01_lr0p1_s1",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 1
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm regrama_t0p01; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "regrama",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.01
+      },
+      "run_id": "methods_regrama_t0p01_lr0p1_s1",
+      "seed": 1,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_regrama_t0p01_lr0p1_s1",
+      "config_hash": "f0676e337156f44f",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 767.2462070100019,
+      "gpu_hours": 0.21312394639166718,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s1/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s1/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s1/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s1/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9250666666666666,
+      "first_10_task_online_accuracy": 0.9249933333333333
+    }
+  },
+  {
+    "run_id": "methods_regrama_t0p01_lr0p1_s2",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 2
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm regrama_t0p01; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "regrama",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.01
+      },
+      "run_id": "methods_regrama_t0p01_lr0p1_s2",
+      "seed": 2,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_regrama_t0p01_lr0p1_s2",
+      "config_hash": "17908a20b30551bd",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 768.4559227430004,
+      "gpu_hours": 0.21345997853972234,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s2/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s2/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s2/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s2/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9247449999999999,
+      "first_10_task_online_accuracy": 0.9260333333333334
+    }
+  },
+  {
+    "run_id": "methods_regrama_t0p01_lr0p1_s3",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 3
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm regrama_t0p01; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "regrama",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.01
+      },
+      "run_id": "methods_regrama_t0p01_lr0p1_s3",
+      "seed": 3,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_regrama_t0p01_lr0p1_s3",
+      "config_hash": "1b753497bb7fdb20",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 762.9068498749975,
+      "gpu_hours": 0.21191856940972154,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s3/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s3/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s3/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s3/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.92594,
+      "first_10_task_online_accuracy": 0.92534
+    }
+  },
+  {
+    "run_id": "methods_regrama_t0p01_lr0p1_s4",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 4
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm regrama_t0p01; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "regrama",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "tau": 0.01
+      },
+      "run_id": "methods_regrama_t0p01_lr0p1_s4",
+      "seed": 4,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_regrama_t0p01_lr0p1_s4",
+      "config_hash": "3557bc82979048fc",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 768.8315859409986,
+      "gpu_hours": 0.21356432942805517,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s4/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s4/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s4/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_regrama_t0p01_lr0p1_s4/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9254499999999999,
+      "first_10_task_online_accuracy": 0.9252133333333333
+    }
+  },
+  {
+    "run_id": "methods_snr_eta0p08_lr0p1_s0",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 0
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm snr_eta0p08; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "snr",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "snr_eta": 0.08,
+        "snr_expansion_factor": 2,
+        "snr_min_age": 100,
+        "snr_tau_max": 20000,
+        "snr_update_every_tasks": 16,
+        "tau": 0.0
+      },
+      "run_id": "methods_snr_eta0p08_lr0p1_s0",
+      "seed": 0,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_snr_eta0p08_lr0p1_s0",
+      "config_hash": "a34abb347798ad5c",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 1064.8688683680002,
+      "gpu_hours": 0.29579690788000007,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s0/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s0/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s0/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s0/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9266833333333334,
+      "first_10_task_online_accuracy": 0.9236850000000001
+    }
+  },
+  {
+    "run_id": "methods_snr_eta0p08_lr0p1_s1",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 1
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm snr_eta0p08; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "snr",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "snr_eta": 0.08,
+        "snr_expansion_factor": 2,
+        "snr_min_age": 100,
+        "snr_tau_max": 20000,
+        "snr_update_every_tasks": 16,
+        "tau": 0.0
+      },
+      "run_id": "methods_snr_eta0p08_lr0p1_s1",
+      "seed": 1,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_snr_eta0p08_lr0p1_s1",
+      "config_hash": "67e19fc5dce14d73",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 1104.1336047200011,
+      "gpu_hours": 0.3067037790888892,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s1/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s1/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s1/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s1/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.92628,
+      "first_10_task_online_accuracy": 0.9240700000000001
+    }
+  },
+  {
+    "run_id": "methods_snr_eta0p08_lr0p1_s2",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 2
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm snr_eta0p08; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "snr",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "snr_eta": 0.08,
+        "snr_expansion_factor": 2,
+        "snr_min_age": 100,
+        "snr_tau_max": 20000,
+        "snr_update_every_tasks": 16,
+        "tau": 0.0
+      },
+      "run_id": "methods_snr_eta0p08_lr0p1_s2",
+      "seed": 2,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_snr_eta0p08_lr0p1_s2",
+      "config_hash": "4e1370af22cf43ca",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 1081.6763718680022,
+      "gpu_hours": 0.3004656588522228,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s2/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s2/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s2/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s2/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.9253616666666667,
+      "first_10_task_online_accuracy": 0.924
+    }
+  },
+  {
+    "run_id": "methods_snr_eta0p08_lr0p1_s3",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 3
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm snr_eta0p08; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "snr",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "snr_eta": 0.08,
+        "snr_expansion_factor": 2,
+        "snr_min_age": 100,
+        "snr_tau_max": 20000,
+        "snr_update_every_tasks": 16,
+        "tau": 0.0
+      },
+      "run_id": "methods_snr_eta0p08_lr0p1_s3",
+      "seed": 3,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_snr_eta0p08_lr0p1_s3",
+      "config_hash": "f221afaf86fcb12b",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 1108.1042684040003,
+      "gpu_hours": 0.3078067412233334,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s3/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s3/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s3/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s3/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.926895,
+      "first_10_task_online_accuracy": 0.9241550000000001
+    }
+  },
+  {
+    "run_id": "methods_snr_eta0p08_lr0p1_s4",
+    "config": {
+      "checkpoint": {
+        "every_tasks": 10,
+        "keep_last": 2
+      },
+      "data": {
+        "batch_size": 128,
+        "flatten": true,
+        "n_probe": 2048,
+        "n_tasks": 200,
+        "name": "permuted_mnist",
+        "reference": "identity",
+        "root": "/kaggle/input/datasets/con1los/1-dataset-neuron-death-code/data",
+        "seed": 4
+      },
+      "determinism": {
+        "strict": true,
+        "warn_only": false
+      },
+      "device": "auto",
+      "l2": {
+        "include_bias": true,
+        "lambda": 0.0
+      },
+      "model": {
+        "activation": "relu",
+        "activation_param": 0.01,
+        "architecture": "mlp",
+        "bias_init": 0.0,
+        "dropout": 0.0,
+        "hidden_dims": [
+          500,
+          500,
+          500
+        ],
+        "in_features": 784,
+        "init": "kaiming_uniform",
+        "norm": "none",
+        "out_features": 10,
+        "output_nonlinearity": null
+      },
+      "notes": "Published neuron-focused method comparison, arm snr_eta0p08; requested as the next step before considering a new method.",
+      "optim": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "lr": 0.1,
+        "momentum": 0.9,
+        "name": "sgd",
+        "weight_decay": 0.0
+      },
+      "probe": {
+        "abs_thresholds": [
+          1e-06,
+          0.0001,
+          0.01
+        ],
+        "grad_window": 100,
+        "intra_task_probe_every": null,
+        "intra_task_probe_reference": true,
+        "n_probe": 2048,
+        "saturation_eps": 0.001,
+        "taus": [
+          0.0,
+          0.01,
+          0.025,
+          0.05,
+          0.1,
+          0.25
+        ]
+      },
+      "recycling": {
+        "composition_on_reference": true,
+        "freq": 1000,
+        "kind": "snr",
+        "reset_optimizer_state": true,
+        "score_batch_size": 64,
+        "snr_eta": 0.08,
+        "snr_expansion_factor": 2,
+        "snr_min_age": 100,
+        "snr_tau_max": 20000,
+        "snr_update_every_tasks": 16,
+        "tau": 0.0
+      },
+      "run_id": "methods_snr_eta0p08_lr0p1_s4",
+      "seed": 4,
+      "shrink_perturb": {
+        "enabled": false,
+        "every_tasks": 1,
+        "perturb": 0.01,
+        "shrink": 0.5
+      }
+    },
+    "summary": {
+      "run_id": "methods_snr_eta0p08_lr0p1_s4",
+      "config_hash": "654cfcb17b3662f1",
+      "n_tasks": 200,
+      "global_step": 93800,
+      "wall_time_s": 1098.1491835269999,
+      "gpu_hours": 0.3050414398686111,
+      "device": "cuda",
+      "status": "complete",
+      "outputs": {
+        "tasks": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s4/tasks.parquet",
+        "metrics": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s4/metrics.parquet",
+        "neurons": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s4/neurons.parquet",
+        "recycling": "/kaggle/working/runs/methods_snr_eta0p08_lr0p1_s4/recycling.parquet",
+        "intra_task": null
+      },
+      "final_10_task_online_accuracy": 0.926115,
+      "first_10_task_online_accuracy": 0.9235616666666667
+    }
+  }
+]
