@@ -156,3 +156,9 @@ inside the frozen windows and needs no bespoke analysis.
 **Cost:** ~0.4 → ~1.6 GPU-h. `n_tasks` is a calibrated field under §3.
 
 **Status: PENDING — moot until a learning rate survives the gate.**
+# 2026-09-07 — Temporal fuzzy V2 development arm
+
+At the researcher and supervisor's explicit request, a separate exploratory
+method-development experiment was added after the original analysis study. It
+does not modify `configs/analysis_plan.json` or any completed baseline. Its
+settings were frozen in `configs/fuzzy_v2_dev_plan.json` before remote launch.

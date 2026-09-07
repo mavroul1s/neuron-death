@@ -1,0 +1,28 @@
+{
+  "status": "FROZEN_BEFORE_FIRST_RUN",
+  "frozen_at": "2026-09-07",
+  "scope": "Exploratory method-development experiment; separate from configs/analysis_plan.json.",
+  "setting": {
+    "dataset": "online permuted MNIST",
+    "tasks": 200,
+    "optimizer": "SGD momentum 0.9",
+    "learning_rate": 0.1,
+    "seeds": [15, 16, 17]
+  },
+  "candidate": {
+    "name": "temporal fuzzy V2",
+    "signals": ["EWMA firing rate", "EWMA realised incoming-weight update ratio", "EWMA conditional loss saliency"],
+    "decision": "TOPSIS-like process health with saliency importance guard",
+    "monitor_every_steps": 100,
+    "warmup_steps": 1000,
+    "patience": 2,
+    "cooldown_steps": 1000,
+    "task_grace_steps": 100,
+    "maximum_reset_fraction_per_layer": 0.075,
+    "degree_threshold": 0.2,
+    "ewma_beta": 0.9
+  },
+  "comparators": ["none", "ReDo tau=0.1", "ReGraMa tau=0.01", "SNR eta=0.08"],
+  "mechanism_control": "Uniform random neurons reset at the exact same steps and per-layer counts as the paired fuzzy V2 run.",
+  "primary_readouts": ["late-window online accuracy", "paired fuzzy V2 minus yoked-random accuracy", "total resets", "dead-exact fraction"]
+}

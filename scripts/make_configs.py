@@ -346,6 +346,61 @@ def fuzzy_smoke(lr: float) -> list:
     return candidates
 
 
+def fuzzy_v2_dev(lr: float) -> list:
+    """Temporal fuzzy V2 and its exact same-dose random control.
+
+    Development seeds are new and the targeted runs are executed first.  Each
+    yoked run then reads the completed targeted run's per-step/per-layer reset
+    counts, so schedule and dose are exact rather than approximately matched.
+    """
+    learning = {
+        "monitor_every": 100,
+        "warmup_steps": 1000,
+        "patience": 2,
+        "cooldown_steps": 1000,
+        "task_grace_steps": 100,
+        "max_reset_fraction": 0.075,
+        "degree_threshold": 0.2,
+        "ewma_beta": 0.9,
+        "activity_full": 0.1,
+        "saliency_quantile": 0.75,
+        "scale_quantile": 0.75,
+        "update_full_ratio": 0.1,
+        "saliency_full_ratio": 0.1,
+    }
+    out = []
+    for seed in range(15, 18):
+        target_id = f"fuzzy_v2_dev_fuzzy_v2_lr{lr:g}_s{seed}".replace(".", "p")
+        arms = {
+            "fuzzy_v2": {"kind": "fuzzy_v2", "learning_degree": learning},
+            "yoked_random": {
+                "kind": "fuzzy_v2_yoked_random",
+                "learning_degree": {"yoked_from_run_id": target_id},
+            },
+            "none": {"kind": "none"},
+            "redo_t0p1": {"kind": "redo", "tau": 0.1, "freq": 1000,
+                           "score_batch_size": 64},
+            "regrama_t0p01": {"kind": "regrama", "tau": 0.01, "freq": 1000,
+                               "score_batch_size": 64},
+            "snr_eta0p08": {"kind": "snr", "score_batch_size": 64,
+                             "snr_eta": 0.08, "snr_tau_max": 20_000,
+                             "snr_update_every_tasks": 16,
+                             "snr_expansion_factor": 2.0, "snr_min_age": 100},
+        }
+        for name, recycler in arms.items():
+            rid = target_id if name == "fuzzy_v2" else (
+                f"fuzzy_v2_dev_{name}_lr{lr:g}_s{seed}".replace(".", "p")
+            )
+            cfg = _base(rid, seed, lr)
+            cfg["recycling"] = dict(recycler, zero_outgoing_after_event=True)
+            cfg["notes"] = (
+                "Pre-result temporal fuzzy V2 development experiment. "
+                "See configs/fuzzy_v2_dev_plan.json."
+            )
+            out.append(cfg)
+    return out
+
+
 def eps_sweep(lr: float) -> list:
     """§B.4 demoted epsilon sweep: ReLU vs LeakyReLU dose-response."""
     out = []
@@ -524,6 +579,7 @@ EXPERIMENTS = {
     "neuron_methods": neuron_methods,
     "fuzzy_v1": fuzzy_v1,
     "fuzzy_smoke": fuzzy_smoke,
+    "fuzzy_v2_dev": fuzzy_v2_dev,
     "eps": eps_sweep,
     # CLAUDE.md §9 replacements for the cancelled transformer arm.
     "setting2": setting2_cifar_cnn,
