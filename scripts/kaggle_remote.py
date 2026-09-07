@@ -344,13 +344,39 @@ def push(api, manifest: dict, manifest_path: Path) -> dict:
     write_json(manifest_path, manifest)
     response = api.kernels_push(str(directory), timeout="39600",
                                 acc="NvidiaTeslaT4" if meta["enable_gpu"] else None)
-    assert_response_ok(response)
-    if response.ref != manifest["kernel"]:
+    error = getattr(response, "error", "") or getattr(response, "error_message", "")
+    returned_ref = getattr(response, "ref", "")
+    # Kaggle 2.2.x can return a nonempty generic error and no `ref` even though
+    # the unique private kernel was created and is already running. Confirm by
+    # an exact owned-kernel listing; never infer success merely from RUNNING.
+    confirmed = owned_kernel_exists(api, manifest["kernel"])
+    if error and not confirmed:
+        raise RuntimeError("Kaggle rejected the kernel submission.")
+    if returned_ref and returned_ref != manifest["kernel"]:
         raise RuntimeError("Server returned a different kernel reference; inspect before retrying.")
-    manifest.update(version=response.version_number, kernel_id=response.kernel_id,
+    if not confirmed:
+        raise RuntimeError("Kernel submission response was not independently confirmed.")
+    version = (getattr(response, "version_number", None)
+               or getattr(response, "versionNumber", None))
+    kernel_id = getattr(response, "kernel_id", None) or getattr(response, "id", None)
+    manifest.update(version=version, kernel_id=kernel_id,
                     state="SUBMITTED", submitted_utc=utc_now())
     write_json(manifest_path, manifest)
-    return {"kernel": manifest["kernel"], "version": response.version_number, "url": manifest["url"]}
+    return {"kernel": manifest["kernel"], "version": version, "url": manifest["url"]}
+
+
+def reconcile_submission(api, manifest: dict, manifest_path: Path) -> dict:
+    """Confirm an uncertain write without ever issuing a second save request."""
+    if not manifest.get("push_attempted_utc"):
+        raise RuntimeError("No kernel submission has been attempted.")
+    if not owned_kernel_exists(api, manifest["kernel"]):
+        raise RuntimeError("The attempted kernel is not visible in the owned-kernel listing.")
+    current = status(api, manifest)
+    manifest.update(state="SUBMITTED_CONFIRMED", reconciled_utc=utc_now(),
+                    last_status=current)
+    write_json(manifest_path, manifest)
+    return {"kernel": manifest["kernel"], "status": current["status"],
+            "url": manifest["url"]}
 
 
 def status(api, manifest: dict) -> dict:
@@ -491,7 +517,7 @@ def main(argv=None) -> int:
         "--reuse-runtime-dataset",
         help="version this account's existing neuron-death-code Dataset",
     )
-    for name in ("upload-runtime", "push", "status", "logs", "output", "watch"):
+    for name in ("upload-runtime", "push", "reconcile", "status", "logs", "output", "watch"):
         sub = commands.add_parser(name)
         sub.add_argument("--manifest", type=Path, required=True)
         if name == "logs":
@@ -515,6 +541,8 @@ def main(argv=None) -> int:
         print(upload_runtime(api, manifest, manifest_path))
     elif args.command == "push":
         print(json.dumps(push(api, manifest, manifest_path)))
+    elif args.command == "reconcile":
+        print(json.dumps(reconcile_submission(api, manifest, manifest_path)))
     elif args.command == "status":
         print(json.dumps(status(api, manifest)))
     elif args.command == "logs":
