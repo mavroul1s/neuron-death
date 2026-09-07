@@ -251,7 +251,8 @@ class LearningDegreeMonitor:
         self.last_step, self.last_task = int(step), int(task_idx)
         return logs
 
-    def after_reset(self, layer_idx: int, indices: np.ndarray, step: int) -> None:
+    def after_reset(self, layer_idx: int, indices: np.ndarray, step: int,
+                    model=None) -> None:
         indices = np.asarray(indices, dtype=np.int64)
         if indices.ndim != 1 or np.any(indices < 0) or np.any(indices >= self.widths[layer_idx]):
             raise ValueError("invalid reset neuron indices")

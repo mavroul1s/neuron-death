@@ -137,6 +137,16 @@ class Trainer:
             run_id=self.run_id,
         )
         self.recycler.initialize_learning_monitor(self.model)
+        if self.recycler.cfg.kind == "fuzzy_v2_yoked_random":
+            source_run = self.recycler.cfg.learning_degree.get("yoked_from_run_id")
+            if not source_run:
+                raise ValueError("fuzzy_v2_yoked_random requires yoked_from_run_id")
+            source = self.run_dir.parent / str(source_run) / "recycling.parquet"
+            if not source.is_file():
+                raise FileNotFoundError(
+                    f"completed fuzzy V2 source schedule not found: {source}"
+                )
+            self.recycler.load_yoked_schedule(source, self.model.hidden_dims)
         self.sp = ShrinkPerturbConfig.from_dict(self.cfg["shrink_perturb"])
         self._sp_gen = torch.Generator()
         self._sp_gen.manual_seed(int(self.cfg["seed"]) ^ _SALT_SP)

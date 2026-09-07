@@ -42,6 +42,8 @@ RECYCLE_KINDS = (
     "regrama",
     "fuzzy",
     "fuzzy_trend",
+    "fuzzy_v2",
+    "fuzzy_v2_yoked_random",
 )
 
 
@@ -349,6 +351,7 @@ class Recycler:
         self._snr_hist: List[Dict[int, np.ndarray]] = []
         self._snr_pending: List[np.ndarray] = []
         self.learning_monitor = None
+        self._yoked_schedule: Dict[int, Dict[int, int]] = {}
 
     @property
     def enabled(self) -> bool:
@@ -357,11 +360,13 @@ class Recycler:
     def due(self, step: int) -> bool:
         """True on steps 1000, 2000, ... (never on step 0: an event before any
         training would recycle the initialisation itself)."""
-        if self.cfg.kind in ("fuzzy", "fuzzy_trend"):
+        if self.cfg.kind in ("fuzzy", "fuzzy_trend", "fuzzy_v2"):
             return self.learning_monitor is not None and any(
                 self.learning_monitor.selected(li).size
                 for li in range(len(self.learning_monitor.widths))
             )
+        if self.cfg.kind == "fuzzy_v2_yoked_random":
+            return step in self._yoked_schedule
         if self.cfg.kind == "snr":
             return step > 0 and any(np.any(mask) for mask in self._snr_pending)
         return self.enabled and step > 0 and step % self.cfg.freq == 0
@@ -372,19 +377,46 @@ class Recycler:
         return self.cfg.kind == "snr"
 
     def initialize_learning_monitor(self, model) -> None:
-        if self.cfg.kind not in ("fuzzy", "fuzzy_trend"):
+        if self.cfg.kind not in ("fuzzy", "fuzzy_trend", "fuzzy_v2"):
             return
-        from .learning_degree import LearningDegreeConfig, LearningDegreeMonitor
 
         if (getattr(model, "activation_name", None) != "relu"
                 or getattr(model, "norm_name", None) != "none"
                 or getattr(model, "dropout_p", 0.0) != 0.0
                 or any(m.weight.ndim != 2 for m in model.linears)):
-            raise ValueError("fuzzy v1 is specified for plain ReLU MLPs without dropout")
+            raise ValueError("fuzzy controllers require a plain ReLU MLP without dropout")
         settings = dict(self.cfg.learning_degree, kind=self.cfg.kind)
-        self.learning_monitor = LearningDegreeMonitor(
-            LearningDegreeConfig.from_dict(settings), model.hidden_dims
-        )
+        if self.cfg.kind == "fuzzy_v2":
+            from .temporal_fuzzy import TemporalFuzzyConfig, TemporalFuzzyMonitor
+            self.learning_monitor = TemporalFuzzyMonitor(
+                TemporalFuzzyConfig.from_dict(settings), model
+            )
+        else:
+            from .learning_degree import LearningDegreeConfig, LearningDegreeMonitor
+            self.learning_monitor = LearningDegreeMonitor(
+                LearningDegreeConfig.from_dict(settings), model.hidden_dims
+            )
+
+    def load_yoked_schedule(self, path, widths: Sequence[int]) -> None:
+        """Load the exact per-step/per-layer reset counts from a completed V2 run."""
+        if self.cfg.kind != "fuzzy_v2_yoked_random":
+            return
+        import pyarrow.parquet as pq
+
+        table = pq.read_table(path, columns=["step", "layer_idx", "k"])
+        rows = table.to_pylist()
+        schedule: Dict[int, Dict[int, int]] = {}
+        for row in rows:
+            step, layer_idx, k = int(row["step"]), int(row["layer_idx"]), int(row["k"])
+            if layer_idx < 0 or layer_idx >= len(widths) or k < 0 or k > int(widths[layer_idx]):
+                raise ValueError("invalid row in fuzzy V2 yoked schedule")
+            if layer_idx in schedule.setdefault(step, {}):
+                raise ValueError("duplicate step/layer in fuzzy V2 yoked schedule")
+            schedule[step][layer_idx] = k
+        expected = set(range(len(widths)))
+        if not schedule or any(set(layers) != expected for layers in schedule.values()):
+            raise ValueError("fuzzy V2 yoked schedule is empty or incomplete")
+        self._yoked_schedule = schedule
 
     def needs_learning_observation(self, step: int) -> bool:
         return (self.learning_monitor is not None
@@ -551,11 +583,18 @@ class Recycler:
                 method_scores = scores
                 method_threshold = self.cfg.tau
                 selection_metric = "sokar_activation"
-                if self.cfg.kind in ("fuzzy", "fuzzy_trend"):
+                if self.cfg.kind in ("fuzzy", "fuzzy_trend", "fuzzy_v2"):
                     selected = self.learning_monitor.selected(layer_idx)
                     selection_metric = self.cfg.kind + "_learning_degree"
                     method_scores = self.learning_monitor.current_degrees(layer_idx)
                     method_threshold = float(self.cfg.learning_degree.get("degree_threshold", 0.2))
+                elif self.cfg.kind == "fuzzy_v2_yoked_random":
+                    k = self._yoked_schedule[int(step)][layer_idx]
+                    selected = (np.sort(self._select_rng.choice(scores.size, size=k, replace=False))
+                                .astype(np.int64)) if k else np.empty(0, dtype=np.int64)
+                    selection_metric = "fuzzy_v2_exact_yoked_random"
+                    method_scores = scores
+                    method_threshold = float("nan")
                 elif self.cfg.kind == "regrama":
                     assert grama_scores is not None
                     method_scores = grama_scores[layer_idx]
@@ -653,7 +692,7 @@ class Recycler:
                         _reset_optimizer_slice(optimizer, outgoing.weight, idx_t, 1, spatial)
             if self.learning_monitor is not None:
                 for layer_idx, selected in result.recycled.items():
-                    self.learning_monitor.after_reset(layer_idx, selected, step)
+                    self.learning_monitor.after_reset(layer_idx, selected, step, model)
 
             self.event_idx += 1
             return result
