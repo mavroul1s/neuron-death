@@ -16,5 +16,5 @@ def test_seed_block_bootstrap_preserves_paired_trajectory_difference():
     b = a - 0.03
     result = seed_block_bootstrap(a, b, n_bootstrap=200, seed=7)
     assert np.isclose(result.point, 0.03)
-    assert np.isclose(result.ci_lo, 0.03)
-    assert np.isclose(result.ci_hi, 0.03)
+    assert np.isclose(result.lo, 0.03)
+    assert np.isclose(result.hi, 0.03)

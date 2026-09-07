@@ -1,0 +1,51 @@
+{
+  "data": {
+    "batch_size": 128,
+    "n_tasks": 200,
+    "name": "permuted_mnist",
+    "root": "data"
+  },
+  "device": "auto",
+  "model": {
+    "activation": "relu",
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "init": "kaiming_uniform"
+  },
+  "notes": "Prospective fuzzy learning-degree pilot; fresh paired seeds. See configs/fuzzy_v1_plan.json, frozen before remote execution.",
+  "optim": {
+    "lr": 0.1,
+    "momentum": 0.9,
+    "name": "sgd"
+  },
+  "recycling": {
+    "kind": "fuzzy_trend",
+    "learning_degree": {
+      "activity_full": 0.1,
+      "cooldown_steps": 1000,
+      "degree_threshold": 0.2,
+      "gradient_full_ratio": 0.1,
+      "gradient_quantile": 0.75,
+      "max_reset_fraction": 0.05,
+      "monitor_every": 100,
+      "patience": 3,
+      "saliency_full_ratio": 0.1,
+      "saliency_quantile": 0.75,
+      "scale_quantile": 0.75,
+      "task_grace_steps": 100,
+      "trend_horizon": 2,
+      "trend_max_degree": 0.5,
+      "trend_min_decline": 0.02,
+      "trend_min_points": 3,
+      "trend_patience": 2,
+      "trend_window": 5,
+      "warmup_steps": 1000
+    },
+    "zero_outgoing_after_event": true
+  },
+  "run_id": "fuzzy_v1_fuzzy_trend_lr0p1_s10",
+  "seed": 10
+}
