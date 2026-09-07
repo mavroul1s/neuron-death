@@ -156,7 +156,14 @@ print("NEURON_DEATH_SOURCE_VERIFIED", {payload_hash!r}, flush=True)
 '''
 
 
-def prepare(notebook: Path, payload: Path, label: str, username: str, accelerator: str = "gpu") -> Path:
+def prepare(
+    notebook: Path,
+    payload: Path,
+    label: str,
+    username: str,
+    accelerator: str = "gpu",
+    reuse_runtime_dataset: str | None = None,
+) -> Path:
     if not re.fullmatch(r"[A-Za-z0-9_-]+", username):
         raise ValueError("Invalid username.")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,17}", label):
@@ -171,7 +178,19 @@ def prepare(notebook: Path, payload: Path, label: str, username: str, accelerato
     notebook_hash = hashlib.sha256(json.dumps(nb, sort_keys=True).encode()).hexdigest()
     identity = hashlib.sha256((payload_hash + notebook_hash).encode()).hexdigest()[:8]
     slug = PREFIX + label + "-" + identity
-    dataset_slug = "neuron-death-fuzzy-runtime-" + payload_hash[:12]
+    if reuse_runtime_dataset is not None:
+        # The account token may allow versioning an owned Dataset but not
+        # datasets.create.  Reuse is deliberately restricted to this project's
+        # established code Dataset; an arbitrary owner/slug is never accepted.
+        if reuse_runtime_dataset != username + "/neuron-death-code":
+            raise ValueError("Only this account's neuron-death-code Dataset may be reused.")
+        dataset_ref = reuse_runtime_dataset
+        dataset_slug = "existing-neuron-death-code-" + payload_hash[:12]
+        runtime_mode = "version_existing"
+    else:
+        dataset_slug = "neuron-death-fuzzy-runtime-" + payload_hash[:12]
+        dataset_ref = username + "/" + dataset_slug
+        runtime_mode = "create_immutable"
     run_dir = scoped_path(ROOT / "remote_runs" / slug)
     if run_dir.exists():
         raise FileExistsError("Run staging already exists; use its manifest or a new label.")
@@ -181,9 +200,10 @@ def prepare(notebook: Path, payload: Path, label: str, username: str, accelerato
     if target_zip.exists() and digest(target_zip) != payload_hash:
         raise RuntimeError("Immutable runtime directory already contains different bytes.")
     shutil.copyfile(payload, target_zip)
-    dataset_ref = username + "/" + dataset_slug
     write_json(dataset_dir / "dataset-metadata.json", {
-        "id": dataset_ref, "title": "Neuron Death Fuzzy Runtime " + payload_hash[:12],
+        "id": dataset_ref,
+        "title": ("neuron-death-code" if runtime_mode == "version_existing"
+                  else "Neuron Death Fuzzy Runtime " + payload_hash[:12]),
         "licenses": [{"name": "other"}],
     })
     write_json(dataset_dir / "runtime-manifest.json", {
@@ -214,6 +234,7 @@ def prepare(notebook: Path, payload: Path, label: str, username: str, accelerato
         "schema_version": 1, "created_utc": utc_now(), "kernel": kernel_ref,
         "url": "https://www.kaggle.com/code/" + kernel_ref,
         "runtime_dataset": dataset_ref, "runtime_directory": str(dataset_dir),
+        "runtime_mode": runtime_mode,
         "runtime_sha256": payload_hash, "source_notebook_sha256": notebook_hash,
         "staged_notebook_sha256": digest(code_file), "kernel_directory": str(kernel_dir),
         "results_dataset": username + "/" + slug + "-results",
@@ -228,7 +249,11 @@ def read_manifest(path: Path, username: str) -> dict:
     for key in ("kernel", "results_dataset"):
         if not data[key].startswith(username + "/" + PREFIX):
             raise ValueError("Manifest points outside this project's private resource namespace.")
-    if not data["runtime_dataset"].startswith(username + "/neuron-death-fuzzy-runtime-"):
+    allowed_runtime = (
+        data["runtime_dataset"].startswith(username + "/neuron-death-fuzzy-runtime-")
+        or data["runtime_dataset"] == username + "/neuron-death-code"
+    )
+    if not allowed_runtime:
         raise ValueError("Unexpected runtime Dataset.")
     for key in ("runtime_directory", "kernel_directory"):
         scoped_path(Path(data[key]))
@@ -241,10 +266,34 @@ def assert_response_ok(response) -> None:
         raise RuntimeError(str(error))
 
 
-def upload_runtime(api, manifest: dict) -> str:
+def upload_runtime(api, manifest: dict, manifest_path: Path) -> str:
     directory = Path(manifest["runtime_directory"])
     if digest(directory / "runtime.zip") != manifest["runtime_sha256"]:
         raise RuntimeError("Runtime payload changed after staging.")
+    if manifest.get("runtime_mode") == "version_existing":
+        if manifest.get("runtime_version_attempted_utc"):
+            raise RuntimeError("Runtime version submission was already attempted; inspect Dataset status.")
+        state = api.dataset_status(manifest["runtime_dataset"])
+        if str(state).lower() not in {"ready", "complete"}:
+            raise RuntimeError("Existing runtime Dataset is not ready: " + str(state))
+        metadata = json.loads((directory / "dataset-metadata.json").read_text(encoding="utf-8"))
+        if metadata.get("id") != manifest["runtime_dataset"]:
+            raise RuntimeError("Runtime Dataset metadata changed after staging.")
+        # Write-before-call makes an uncertain network response non-repeatable.
+        manifest["runtime_version_attempted_utc"] = utc_now()
+        write_json(manifest_path, manifest)
+        response = api.dataset_create_version(
+            str(directory),
+            version_notes="Fuzzy v1 runtime " + manifest["runtime_sha256"][:12],
+            quiet=True,
+            convert_to_csv=False,
+            delete_old_versions=False,
+        )
+        assert_response_ok(response)
+        manifest["runtime_version"] = getattr(response, "version_number", None)
+        manifest["state"] = "RUNTIME_UPLOADED"
+        write_json(manifest_path, manifest)
+        return "versioned"
     try:
         return api.dataset_status(manifest["runtime_dataset"])
     except Exception as exc:
@@ -253,6 +302,13 @@ def upload_runtime(api, manifest: dict) -> str:
     response = api.dataset_create_new(str(directory), public=False, quiet=True, convert_to_csv=False)
     assert_response_ok(response)
     return "created"
+
+
+def owned_kernel_exists(api, kernel_ref: str) -> bool:
+    """Exact duplicate guard for clients that map a missing private kernel to 403."""
+    _, slug = kernel_ref.split("/", 1)
+    candidates = api.kernels_list(mine=True, search=slug, page=1, page_size=100) or []
+    return any(getattr(item, "ref", None) == kernel_ref for item in candidates)
 
 
 def push(api, manifest: dict, manifest_path: Path) -> dict:
@@ -271,7 +327,13 @@ def push(api, manifest: dict, manifest_path: Path) -> dict:
     try:
         api.kernels_status(manifest["kernel"])
     except Exception as exc:
-        if getattr(getattr(exc, "response", None), "status_code", None) != 404:
+        status_code = getattr(getattr(exc, "response", None), "status_code", None)
+        missing_private = (
+            isinstance(exc, ValueError)
+            and "Permission 'kernels.get' was denied" in str(exc)
+            and not owned_kernel_exists(api, manifest["kernel"])
+        )
+        if status_code != 404 and not missing_private:
             raise
     else:
         raise RuntimeError("Kernel already exists; refusing to overwrite or launch another version.")
@@ -390,7 +452,18 @@ def watch(api, manifest: dict, manifest_path: Path, interval: int, max_hours: fl
             if current["status"] in TERMINAL:
                 files = download_outputs(api, manifest, manifest_path.parent / "output")
                 manifest["downloaded_files"] = files
-                manifest["archive"] = archive_outputs(api, manifest, manifest_path.parent)
+                try:
+                    manifest["archive"] = archive_outputs(api, manifest, manifest_path.parent)
+                except Exception as exc:
+                    # Kernel outputs are already persistent on Kaggle and have
+                    # been downloaded locally. A token lacking datasets.create
+                    # must not turn a successful experiment into an endless
+                    # watcher loop or trigger a second kernel submission.
+                    manifest["archive"] = {
+                        "state": "not_created",
+                        "error_type": type(exc).__name__,
+                        "local_output": str(manifest_path.parent / "output"),
+                    }
                 manifest["watcher_finished_utc"] = utc_now()
                 write_json(manifest_path, manifest)
                 print(json.dumps({"archived": manifest["archive"], "files": len(files)}), flush=True)
@@ -414,6 +487,10 @@ def main(argv=None) -> int:
     prep.add_argument("--payload", type=Path, required=True)
     prep.add_argument("--label", required=True)
     prep.add_argument("--accelerator", choices=("cpu", "gpu"), default="gpu")
+    prep.add_argument(
+        "--reuse-runtime-dataset",
+        help="version this account's existing neuron-death-code Dataset",
+    )
     for name in ("upload-runtime", "push", "status", "logs", "output", "watch"):
         sub = commands.add_parser(name)
         sub.add_argument("--manifest", type=Path, required=True)
@@ -425,14 +502,17 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     credentials = read_credentials(args.credentials_dir)
     if args.command == "prepare":
-        result = prepare(args.notebook, args.payload, args.label, credentials["username"], args.accelerator)
+        result = prepare(
+            args.notebook, args.payload, args.label, credentials["username"],
+            args.accelerator, args.reuse_runtime_dataset,
+        )
         print(result)
         return 0
     manifest_path = args.manifest.resolve()
     manifest = read_manifest(manifest_path, credentials["username"])
     api = api_client(args.credentials_dir, args.sdk_path)
     if args.command == "upload-runtime":
-        print(upload_runtime(api, manifest))
+        print(upload_runtime(api, manifest, manifest_path))
     elif args.command == "push":
         print(json.dumps(push(api, manifest, manifest_path)))
     elif args.command == "status":
