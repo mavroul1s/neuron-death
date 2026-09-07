@@ -42,6 +42,11 @@ EXCLUDE_DIRS = {
     "paper",
     "runs",
     "data",
+    "api_kaggle",
+    "remote_runs",
+    "results",
+    ".test_deps",
+    ".kaggle_tools",
 }
 EXCLUDE_SUFFIXES = {".pyc", ".pyo", ".zip", ".parquet", ".pt", ".tex"}
 EXCLUDE_FILES = {
@@ -66,6 +71,8 @@ FORCE_INCLUDE = {Path("runs/LEDGER.md"), Path("data/mnist.npz")}
 
 def _wanted(path: Path) -> bool:
     rel = path.relative_to(ROOT)
+    if path.name.lower() == "kaggle.json" or path.name.startswith(".env"):
+        return False
     if rel in FORCE_INCLUDE:
         return True
     if rel in EXCLUDE_FILES:

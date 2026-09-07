@@ -1,4 +1,11 @@
 # Local AI-assistant context and working notes (never publish)
+/api_kaggle/
+**/kaggle.json
+.env
+.env.*
+/remote_runs/
+/.test_deps/
+/.kaggle_tools/
 /.claude/
 /.codex/
 /.agents/
@@ -40,6 +47,7 @@
 !/kaggle_upload/1_DATASET_neuron-death-code.zip
 !/kaggle_upload/2_neuron_methods.ipynb
 !/kaggle_upload/README.txt
+!/kaggle_upload/3_fuzzy_learning.ipynb
 
 # Python/editor caches and local environments
 __pycache__/

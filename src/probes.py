@@ -386,6 +386,160 @@ def neuron_weight_norms(
 
 
 # ---------------------------------------------------------------------------
+# Learning-degree primitives (prospective method pilot, September 2026).
+# These are new metrics, not replacements for any published death definition.
+# ---------------------------------------------------------------------------
+
+@torch.no_grad()
+def learning_degree_features(
+    post: torch.Tensor,
+    incoming_weight_gradient: torch.Tensor,
+    *,
+    gradient_quantile: float = 0.75,
+    saliency_quantile: float = 0.75,
+) -> Dict[str, np.ndarray]:
+    """Three per-neuron training signals, without a layer mean.
+
+    The pilot supports unnormalised ReLU MLPs only. ``post.grad`` must have
+    been retained before backward of a batch-MEAN loss. Multiplying it by N
+    removes the batch reduction factor (including a short final batch).
+
+    * activity: fraction of examples with h>0 (bounded, so activation magnitude
+      outliers cannot dominate this measurement);
+    * gradient: Q75 of |dL/dW_i| over incoming weights;
+    * saliency: Q75 of |h_i * N*dL/dh_i| among examples where h_i>0.
+
+    The last signal is a first-order loss-sensitivity proxy, NOT an exact
+    counterfactual contribution to loss. Conditioning on firing preserves a
+    rare but useful unit which an unconditional batch quantile would erase.
+    With only one firing example it necessarily has no outlier robustness;
+    persistence in the controller addresses transient observations.
+
+    Computation is detached CPU float64. It changes neither gradients nor RNG
+    and is intentionally independent of probe/evaluation examples and labels.
+    """
+    if post.ndim != 2 or incoming_weight_gradient.ndim != 2:
+        raise ValueError("learning-degree pilot requires fully connected activations")
+    if post.grad is None:
+        raise RuntimeError("learning-degree requires post.retain_grad() before backward")
+    if post.shape[0] == 0 or post.shape[1] != incoming_weight_gradient.shape[0]:
+        raise ValueError("learning-degree activation/gradient dimensions disagree")
+    for q in (gradient_quantile, saliency_quantile):
+        if not 0 < q < 1:
+            raise ValueError("learning-degree quantiles must lie strictly between 0 and 1")
+    h = post.detach().to(device="cpu", dtype=torch.float64).numpy()
+    dh = post.grad.detach().to(device="cpu", dtype=torch.float64).numpy()
+    gw = incoming_weight_gradient.detach().to(device="cpu", dtype=torch.float64).numpy()
+    if not all(np.isfinite(v).all() for v in (h, dh, gw)):
+        raise FloatingPointError("non-finite learning-degree activation or gradient")
+    if (h < 0).any():
+        raise ValueError("learning-degree pilot requires nonnegative ReLU activations")
+    active = h > 0
+    activity = np.count_nonzero(active, axis=0) / float(h.shape[0])
+    gradient = np.quantile(np.abs(gw), gradient_quantile, axis=1)
+    sensitivity = np.abs(h * (dh * h.shape[0]))
+    if not np.isfinite(sensitivity).all():
+        raise FloatingPointError("overflow in learning-degree loss-sensitivity proxy")
+    # Quantile only on live columns avoids an all-NaN quantile for dead units.
+    live = active.any(axis=0)
+    saliency = np.zeros(h.shape[1], dtype=np.float64)
+    if live.any():
+        samples = np.where(active[:, live], sensitivity[:, live], np.nan)
+        saliency[live] = np.nanquantile(samples, saliency_quantile, axis=0)
+    return {"activity": activity, "gradient": gradient, "saliency": saliency}
+
+
+def learning_degree_reference(values: np.ndarray, quantile: float = 0.75) -> float:
+    """Layer quantile of strictly-positive feature values; 0 if none exist.
+
+    Excluding zeros prevents a mostly dead layer from setting its scale to
+    zero. The controller takes the median of these warmup references and then
+    freezes them, so later uniform layer shrinkage is not normalised away.
+    """
+    values = np.asarray(values, dtype=np.float64)
+    if not 0 < quantile < 1 or not np.isfinite(values).all() or (values < 0).any():
+        raise ValueError("invalid values or quantile for learning-degree reference")
+    positive = values[values > 0]
+    return float(np.quantile(positive, quantile)) if positive.size else 0.0
+
+
+def fuzzy_learning_degree(
+    features: Dict[str, np.ndarray],
+    gradient_reference: float,
+    saliency_reference: float,
+    *,
+    activity_full: float = 0.1,
+    gradient_full_ratio: float = 0.1,
+    saliency_full_ratio: float = 0.1,
+) -> Dict[str, np.ndarray]:
+    """Transparent fuzzy AND=min, OR=max; all memberships lie in [0,1].
+
+    Rules: retain a consequential neuron OR a neuron both active and learning.
+    Consequently degree=max(saliency_health,min(activity_health,gradient_health)).
+    This is a proposed fuzzy decision score, not a calibrated probability.
+    If a warmup reference is zero, positive evidence maps to health=1, zero
+    evidence to 0; no arbitrary dimensional epsilon changes the decision.
+    """
+    def membership(raw, scale):
+        raw = np.asarray(raw, dtype=np.float64)
+        if not np.isfinite(raw).all() or (raw < 0).any():
+            raise ValueError("fuzzy memberships require finite nonnegative features")
+        if scale == 0:
+            return (raw > 0).astype(np.float64)
+        with np.errstate(over="ignore"):
+            return np.clip(raw / scale, 0.0, 1.0)
+
+    if not all(np.isfinite(v) and v > 0 for v in
+               (activity_full, gradient_full_ratio, saliency_full_ratio)):
+        raise ValueError("membership full thresholds must be positive and finite")
+    if not all(np.isfinite(v) and v >= 0 for v in
+               (gradient_reference, saliency_reference)):
+        raise ValueError("learning-degree references must be finite and nonnegative")
+    a = membership(features["activity"], activity_full)
+    g = membership(features["gradient"], gradient_reference * gradient_full_ratio)
+    c = membership(features["saliency"], saliency_reference * saliency_full_ratio)
+    if a.shape != g.shape or a.shape != c.shape:
+        raise ValueError("learning-degree feature shapes must match")
+    return {"activity_health": a, "gradient_health": g, "saliency_health": c,
+            "degree": np.maximum(c, np.minimum(a, g))}
+
+
+def learning_degree_forecast(
+    steps: Sequence[int],
+    history: np.ndarray,
+    *,
+    monitor_every: int,
+    horizon: int = 2,
+    min_points: int = 3,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Causal Theil-Sen slope, in degree per monitor interval, and forecast.
+
+    The caller supplies observed past/current values only. A reset invalidates
+    a unit's previous history with NaN. At least ``min_points`` valid points
+    are required; otherwise slope=0 and forecast=current degree. Positive
+    slopes never inflate the forecast above the current score.
+    """
+    y = np.asarray(history, dtype=np.float64)
+    t = np.asarray(steps, dtype=np.float64)
+    if y.ndim != 2 or y.shape[0] != t.size or not t.size:
+        raise ValueError("forecast expects (observations, neurons) and matching steps")
+    if monitor_every <= 0 or horizon <= 0 or min_points < 2 or np.any(np.diff(t) <= 0):
+        raise ValueError("forecast needs positive intervals and strictly increasing steps")
+    if not np.isfinite(y[-1]).all() or np.isinf(y).any():
+        raise ValueError("forecast current values must be finite")
+    if np.any((y[np.isfinite(y)] < 0) | (y[np.isfinite(y)] > 1)):
+        raise ValueError("forecast degrees must be in [0,1]")
+    valid = np.isfinite(y).sum(axis=0) >= min_points
+    slope = np.zeros(y.shape[1], dtype=np.float64)
+    if valid.any():
+        pairs = [(y[j, valid] - y[i, valid]) / ((t[j] - t[i]) / monitor_every)
+                 for i in range(len(t)) for j in range(i + 1, len(t))]
+        slope[valid] = np.nanmedian(np.stack(pairs), axis=0)
+    predicted = np.clip(y[-1] + horizon * np.minimum(slope, 0.0), 0.0, 1.0)
+    return slope, predicted
+
+
+# ---------------------------------------------------------------------------
 # Per-layer probe result
 # ---------------------------------------------------------------------------
 

@@ -44,7 +44,7 @@ import pyarrow.parquet as pq
 #: the post-task-switch death spike cannot be seen at task-boundary resolution.
 #: It was omitted from the first version of this list, which meant the first C5
 #: session's extract had no C5 data in it. Do not remove it again.
-EXTRACT_TABLES = ("tasks", "metrics", "recycling", "intra_task")
+EXTRACT_TABLES = ("tasks", "metrics", "recycling", "intra_task", "learning_degree")
 
 #: The C4 subset of `neurons.parquet` (CLAUDE.md §5.4, claim C4).
 #:

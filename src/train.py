@@ -136,6 +136,7 @@ class Trainer:
             probe_cfg=self.probe_cfg,
             run_id=self.run_id,
         )
+        self.recycler.initialize_learning_monitor(self.model)
         self.sp = ShrinkPerturbConfig.from_dict(self.cfg["shrink_perturb"])
         self._sp_gen = torch.Generator()
         self._sp_gen.manual_seed(int(self.cfg["seed"]) ^ _SALT_SP)
@@ -169,6 +170,8 @@ class Trainer:
             # Empty unless probe.intra_task_probe_every is set (C5, §5.6).
             "intra_task": ShardedParquetLog(self.run_dir, "intra_task"),
         }
+        if self.recycler.learning_monitor is not None:
+            self.logs["learning_degree"] = ShardedParquetLog(self.run_dir, "learning_degree")
 
         save_config(self.cfg, self.run_dir / "config.json")
         with open(self.run_dir / "environment.json", "w", encoding="utf-8") as f:
@@ -209,6 +212,8 @@ class Trainer:
         self._t_start = time.perf_counter()
         for task_idx in range(start_task, n_tasks):
             self._run_task(task_idx)
+            print(f"TRAINING_PROGRESS run_id={self.run_id} task={task_idx + 1}/{n_tasks} "
+                  f"step={self.global_step}", flush=True)
             is_last = task_idx == n_tasks - 1
             if (task_idx + 1) % ckpt_every == 0 or is_last:
                 for log in self.logs.values():
@@ -242,7 +247,12 @@ class Trainer:
             self._intra_task_probe(task_idx, step_in_task, probe_x)
 
         for xb, yb in ds.task_batches(task_idx):
-            if self.recycler.needs_training_activations:
+            monitor_now = self.recycler.needs_learning_observation(self.global_step + 1)
+            if monitor_now:
+                logits, _, train_posts = model.forward_with_activations(xb)
+                for post in train_posts:
+                    post.retain_grad()
+            elif self.recycler.needs_training_activations:
                 logits, _, train_posts = model.forward_with_activations(xb)
                 self.recycler.observe_activations(train_posts)
             else:
@@ -264,6 +274,11 @@ class Trainer:
             opt.zero_grad(set_to_none=True)
             total.backward()
             self.grad_tracker.update()  # after backward, before step
+            if monitor_now:
+                self.logs["learning_degree"].add_rows(self.recycler.observe_learning(
+                    model, train_posts, self.global_step + 1,
+                    task_idx, step_in_task + 1,
+                ))
             opt.step()
 
             self.global_step += 1
@@ -543,6 +558,10 @@ class Trainer:
         paths = {name: log.finalize() for name, log in self.logs.items()}
         cleanup_shard_dir(self.run_dir)
         self._verify_per_neuron_log(n_tasks, paths.get("neurons"))
+        if self.recycler.learning_monitor is not None:
+            degree_path = paths.get("learning_degree")
+            if degree_path is None or pq.read_metadata(degree_path).num_rows == 0:
+                raise RuntimeError("fuzzy run missing the prospective learning-degree log")
 
         summary = {
             "run_id": self.run_id,

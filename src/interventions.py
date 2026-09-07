@@ -40,6 +40,8 @@ RECYCLE_KINDS = (
     "inverse_matched",
     "snr",
     "regrama",
+    "fuzzy",
+    "fuzzy_trend",
 )
 
 
@@ -231,6 +233,11 @@ class RecyclerConfig:
     snr_update_every_tasks: int = 16
     snr_expansion_factor: float = 2.0
     snr_min_age: int = 100
+    learning_degree: dict = field(default_factory=dict)
+    # Opt-in for the new benchmark, applied identically to ALL its arms.
+    # A later layer's incoming reset can otherwise overwrite an earlier
+    # layer's zero outgoing slice at their intersection.
+    zero_outgoing_after_event: bool = False
 
     def __post_init__(self):
         if self.kind not in RECYCLE_KINDS:
@@ -263,6 +270,8 @@ class RecyclerConfig:
             snr_update_every_tasks=int(d.get("snr_update_every_tasks", 16)),
             snr_expansion_factor=float(d.get("snr_expansion_factor", 2.0)),
             snr_min_age=int(d.get("snr_min_age", 100)),
+            learning_degree=dict(d.get("learning_degree", {})),
+            zero_outgoing_after_event=bool(d.get("zero_outgoing_after_event", False)),
         )
 
     def to_dict(self) -> dict:
@@ -278,6 +287,8 @@ class RecyclerConfig:
             "snr_update_every_tasks": self.snr_update_every_tasks,
             "snr_expansion_factor": self.snr_expansion_factor,
             "snr_min_age": self.snr_min_age,
+            "learning_degree": self.learning_degree,
+            "zero_outgoing_after_event": self.zero_outgoing_after_event,
         }
 
 
@@ -337,6 +348,7 @@ class Recycler:
         self._snr_thresholds: List[np.ndarray] = []
         self._snr_hist: List[Dict[int, np.ndarray]] = []
         self._snr_pending: List[np.ndarray] = []
+        self.learning_monitor = None
 
     @property
     def enabled(self) -> bool:
@@ -345,6 +357,11 @@ class Recycler:
     def due(self, step: int) -> bool:
         """True on steps 1000, 2000, ... (never on step 0: an event before any
         training would recycle the initialisation itself)."""
+        if self.cfg.kind in ("fuzzy", "fuzzy_trend"):
+            return self.learning_monitor is not None and any(
+                self.learning_monitor.selected(li).size
+                for li in range(len(self.learning_monitor.widths))
+            )
         if self.cfg.kind == "snr":
             return step > 0 and any(np.any(mask) for mask in self._snr_pending)
         return self.enabled and step > 0 and step % self.cfg.freq == 0
@@ -353,6 +370,33 @@ class Recycler:
     def needs_training_activations(self) -> bool:
         """Whether the training forward must expose hidden activations."""
         return self.cfg.kind == "snr"
+
+    def initialize_learning_monitor(self, model) -> None:
+        if self.cfg.kind not in ("fuzzy", "fuzzy_trend"):
+            return
+        from .learning_degree import LearningDegreeConfig, LearningDegreeMonitor
+
+        if (getattr(model, "activation_name", None) != "relu"
+                or getattr(model, "norm_name", None) != "none"
+                or getattr(model, "dropout_p", 0.0) != 0.0
+                or any(m.weight.ndim != 2 for m in model.linears)):
+            raise ValueError("fuzzy v1 is specified for plain ReLU MLPs without dropout")
+        settings = dict(self.cfg.learning_degree, kind=self.cfg.kind)
+        self.learning_monitor = LearningDegreeMonitor(
+            LearningDegreeConfig.from_dict(settings), model.hidden_dims
+        )
+
+    def needs_learning_observation(self, step: int) -> bool:
+        return (self.learning_monitor is not None
+                and self.learning_monitor.should_observe(step))
+
+    def observe_learning(self, model, posts, step, task_idx, step_in_task):
+        rows = self.learning_monitor.observe(
+            model, posts, step, task_idx, step_in_task
+        )
+        for row in rows:
+            row["run_id"] = self.run_id
+        return rows
 
     def _initialize_snr(self, widths: Sequence[int]) -> None:
         self._snr_ages = [np.zeros(int(h), dtype=np.int64) for h in widths]
@@ -507,7 +551,12 @@ class Recycler:
                 method_scores = scores
                 method_threshold = self.cfg.tau
                 selection_metric = "sokar_activation"
-                if self.cfg.kind == "regrama":
+                if self.cfg.kind in ("fuzzy", "fuzzy_trend"):
+                    selected = self.learning_monitor.selected(layer_idx)
+                    selection_metric = self.cfg.kind + "_learning_degree"
+                    method_scores = np.full(scores.size, np.nan)
+                    method_threshold = float(self.cfg.learning_degree.get("degree_threshold", 0.2))
+                elif self.cfg.kind == "regrama":
                     assert grama_scores is not None
                     method_scores = grama_scores[layer_idx]
                     selected = np.flatnonzero(method_scores <= self.cfg.tau).astype(
@@ -591,6 +640,21 @@ class Recycler:
                     self._snr_pending[layer_idx][selected] = False
                 result.recycled[layer_idx] = selected
 
+            if self.cfg.zero_outgoing_after_event:
+                # Two-phase reset: keep every selected unit's outgoing weights
+                # zero, including intersections with a reset in the next layer.
+                for layer_idx, selected in result.recycled.items():
+                    idx_t = torch.as_tensor(selected, dtype=torch.long,
+                                            device=model.incoming_linear(layer_idx).weight.device)
+                    spatial = getattr(model, "outgoing_spatial", lambda _: 1)(layer_idx)
+                    outgoing = model.outgoing_linear(layer_idx)
+                    _zero_outgoing(outgoing, idx_t, spatial)
+                    if self.cfg.reset_optimizer_state:
+                        _reset_optimizer_slice(optimizer, outgoing.weight, idx_t, 1, spatial)
+            if self.learning_monitor is not None:
+                for layer_idx, selected in result.recycled.items():
+                    self.learning_monitor.after_reset(layer_idx, selected, step)
+
             self.event_idx += 1
             return result
         finally:
@@ -612,12 +676,18 @@ class Recycler:
                 "hist": self._snr_hist,
                 "pending": self._snr_pending,
             }
+        if self.learning_monitor is not None:
+            state["learning_degree"] = self.learning_monitor.state_dict()
         return state
 
     def load_state_dict(self, state: dict) -> None:
         self.event_idx = int(state["event_idx"])
         self._weight_gen.set_state(state["weight_gen"])
         self._select_rng.bit_generator.state = state["select_rng"]
+        if self.learning_monitor is not None:
+            if "learning_degree" not in state:
+                raise RuntimeError("fuzzy checkpoint is missing its monitoring state")
+            self.learning_monitor.load_state_dict(state["learning_degree"])
         snr = state.get("snr")
         if snr is not None:
             self._snr_ages = [np.asarray(x, dtype=np.int64) for x in snr["ages"]]
