@@ -331,6 +331,21 @@ def fuzzy_v1(lr: float) -> list:
     return out
 
 
+def fuzzy_smoke(lr: float) -> list:
+    """Short remote pre-flight using the exact two candidate definitions."""
+    candidates = [cfg for cfg in fuzzy_v1(lr)
+                  if cfg["seed"] == 10 and cfg["recycling"]["kind"] in
+                  ("fuzzy", "fuzzy_trend")]
+    for cfg in candidates:
+        kind = cfg["recycling"]["kind"]
+        cfg["seed"] = 99
+        cfg["data"]["n_tasks"] = 4
+        cfg["checkpoint"] = {"every_tasks": 2, "keep_last": 2}
+        cfg["run_id"] = f"fuzzy_smoke_{kind}_lr{lr:g}_s99".replace(".", "p")
+        cfg["notes"] = "Four-task Kaggle pre-flight; excluded from every estimate."
+    return candidates
+
+
 def eps_sweep(lr: float) -> list:
     """§B.4 demoted epsilon sweep: ReLU vs LeakyReLU dose-response."""
     out = []
@@ -508,6 +523,7 @@ EXPERIMENTS = {
     "c5": c5_optimizer,
     "neuron_methods": neuron_methods,
     "fuzzy_v1": fuzzy_v1,
+    "fuzzy_smoke": fuzzy_smoke,
     "eps": eps_sweep,
     # CLAUDE.md §9 replacements for the cancelled transformer arm.
     "setting2": setting2_cifar_cnn,

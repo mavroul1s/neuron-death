@@ -1,0 +1,55 @@
+{
+  "checkpoint": {
+    "every_tasks": 2,
+    "keep_last": 2
+  },
+  "data": {
+    "batch_size": 128,
+    "n_tasks": 4,
+    "name": "permuted_mnist",
+    "root": "data"
+  },
+  "device": "auto",
+  "model": {
+    "activation": "relu",
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "init": "kaiming_uniform"
+  },
+  "notes": "Four-task Kaggle pre-flight; excluded from every estimate.",
+  "optim": {
+    "lr": 0.1,
+    "momentum": 0.9,
+    "name": "sgd"
+  },
+  "recycling": {
+    "kind": "fuzzy",
+    "learning_degree": {
+      "activity_full": 0.1,
+      "cooldown_steps": 1000,
+      "degree_threshold": 0.2,
+      "gradient_full_ratio": 0.1,
+      "gradient_quantile": 0.75,
+      "max_reset_fraction": 0.05,
+      "monitor_every": 100,
+      "patience": 3,
+      "saliency_full_ratio": 0.1,
+      "saliency_quantile": 0.75,
+      "scale_quantile": 0.75,
+      "task_grace_steps": 100,
+      "trend_horizon": 2,
+      "trend_max_degree": 0.5,
+      "trend_min_decline": 0.02,
+      "trend_min_points": 3,
+      "trend_patience": 2,
+      "trend_window": 5,
+      "warmup_steps": 1000
+    },
+    "zero_outgoing_after_event": true
+  },
+  "run_id": "fuzzy_smoke_fuzzy_lr0p1_s99",
+  "seed": 99
+}
