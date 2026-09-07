@@ -13,6 +13,7 @@ from dataclasses import asdict, dataclass
 from typing import Sequence
 
 import numpy as np
+import torch
 
 from .probes import (
     fuzzy_topsis_degree,
@@ -227,9 +228,7 @@ class TemporalFuzzyMonitor:
         )
         if model is not None:
             weight = model.incoming_linear(layer_idx).weight.detach()
-            idx = __import__("torch").as_tensor(
-                indices, dtype=__import__("torch").long, device=weight.device
-            )
+            idx = torch.as_tensor(indices, dtype=torch.long, device=weight.device)
             self._weight_snapshot[layer_idx].index_copy_(0, idx, weight.index_select(0, idx))
         self._pending[layer_idx] = np.setdiff1d(self._pending[layer_idx], indices)
 
