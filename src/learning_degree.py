@@ -98,7 +98,7 @@ class LearningDegreeMonitor:
     including zero for tiny test layers: it is never silently rounded upward.
     """
 
-    STATE_VERSION = 1
+    STATE_VERSION = 2
 
     def __init__(self, cfg: LearningDegreeConfig, widths: Sequence[int]):
         self.cfg = cfg
@@ -117,6 +117,7 @@ class LearningDegreeMonitor:
         self._last_reset = [np.full(w, -cfg.cooldown_steps - 1, dtype=np.int64)
                             for w in self.widths]
         self._pending = [np.empty(0, dtype=np.int64) for _ in self.widths]
+        self._latest_degree = [np.full(w, np.nan, dtype=np.float64) for w in self.widths]
         self._history = [[] for _ in self.widths]
         self._history_steps = [[] for _ in self.widths]
 
@@ -125,6 +126,10 @@ class LearningDegreeMonitor:
 
     def selected(self, layer_idx: int) -> np.ndarray:
         return self._pending[layer_idx].copy()
+
+    def current_degrees(self, layer_idx: int) -> np.ndarray:
+        """Return the causal score used at the most recent monitoring event."""
+        return self._latest_degree[layer_idx].copy()
 
     def observe(self, model, posts, step: int, task_idx: int,
                 step_in_task: int) -> list[dict]:
@@ -189,6 +194,7 @@ class LearningDegreeMonitor:
                 gradient_full_ratio=cfg.gradient_full_ratio,
                 saliency_full_ratio=cfg.saliency_full_ratio)
             degree = health["degree"]
+            self._latest_degree[i] = degree.copy()
             self._history[i].append(degree.copy())
             self._history_steps[i].append(step)
             self._history[i] = self._history[i][-cfg.trend_window:]
@@ -270,6 +276,7 @@ class LearningDegreeMonitor:
             "gradient_samples": self._gradient_samples, "saliency_samples": self._saliency_samples,
             "low_count": self._low_count, "trend_count": self._trend_count,
             "last_reset": self._last_reset, "pending": self._pending,
+            "latest_degree": self._latest_degree,
             "history": self._history, "history_steps": self._history_steps,
         })
 
@@ -281,5 +288,5 @@ class LearningDegreeMonitor:
         for key in ("last_step", "last_task", "calibrated", "gradient_reference", "saliency_reference"):
             setattr(self, key, state[key])
         for key in ("gradient_samples", "saliency_samples", "low_count", "trend_count",
-                    "last_reset", "pending", "history", "history_steps"):
+                    "last_reset", "pending", "latest_degree", "history", "history_steps"):
             setattr(self, "_" + key, state[key])

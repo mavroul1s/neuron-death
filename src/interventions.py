@@ -554,7 +554,7 @@ class Recycler:
                 if self.cfg.kind in ("fuzzy", "fuzzy_trend"):
                     selected = self.learning_monitor.selected(layer_idx)
                     selection_metric = self.cfg.kind + "_learning_degree"
-                    method_scores = np.full(scores.size, np.nan)
+                    method_scores = self.learning_monitor.current_degrees(layer_idx)
                     method_threshold = float(self.cfg.learning_degree.get("degree_threshold", 0.2))
                 elif self.cfg.kind == "regrama":
                     assert grama_scores is not None
