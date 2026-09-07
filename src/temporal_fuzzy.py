@@ -227,7 +227,10 @@ class TemporalFuzzyMonitor:
         )
         if model is not None:
             weight = model.incoming_linear(layer_idx).weight.detach()
-            self._weight_snapshot[layer_idx][indices] = weight[indices]
+            idx = __import__("torch").as_tensor(
+                indices, dtype=__import__("torch").long, device=weight.device
+            )
+            self._weight_snapshot[layer_idx].index_copy_(0, idx, weight.index_select(0, idx))
         self._pending[layer_idx] = np.setdiff1d(self._pending[layer_idx], indices)
 
     def state_dict(self) -> dict:
