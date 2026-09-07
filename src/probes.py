@@ -449,6 +449,112 @@ def learning_degree_features(
     return {"activity": activity, "gradient": gradient, "saliency": saliency}
 
 
+@torch.no_grad()
+def temporal_learning_features(
+    post: torch.Tensor,
+    current_weight: torch.Tensor,
+    previous_weight: torch.Tensor,
+    *,
+    saliency_quantile: float = 0.75,
+) -> Dict[str, np.ndarray]:
+    """Causal signals for the temporal fuzzy V2 controller.
+
+    ``update_ratio`` is the *realised* incoming-weight movement since the last
+    monitoring point, ``||W_t-W_{t-1}|| / ||W_{t-1}||``.  Unlike an
+    instantaneous gradient, it includes momentum and the actual optimiser
+    step.  Activity and conditional loss saliency are measured on the current
+    training mini-batch; no evaluation data or future observation is used.
+    """
+    if post.ndim != 2 or current_weight.ndim != 2 or previous_weight.ndim != 2:
+        raise ValueError("temporal fuzzy V2 requires fully connected layers")
+    if post.grad is None:
+        raise RuntimeError("temporal fuzzy V2 requires post.retain_grad() before backward")
+    if current_weight.shape != previous_weight.shape or post.shape[1] != current_weight.shape[0]:
+        raise ValueError("temporal fuzzy activation/weight dimensions disagree")
+    if not 0 < saliency_quantile < 1:
+        raise ValueError("saliency_quantile must lie strictly between 0 and 1")
+
+    h = post.detach().to(device="cpu", dtype=torch.float64).numpy()
+    dh = post.grad.detach().to(device="cpu", dtype=torch.float64).numpy()
+    if not np.isfinite(h).all() or not np.isfinite(dh).all() or (h < 0).any():
+        raise FloatingPointError("invalid temporal fuzzy activation or derivative")
+    active = h > 0
+    activity = np.count_nonzero(active, axis=0) / float(h.shape[0])
+    sensitivity = np.abs(h * (dh * h.shape[0]))
+    live = active.any(axis=0)
+    saliency = np.zeros(h.shape[1], dtype=np.float64)
+    if live.any():
+        samples = np.where(active[:, live], sensitivity[:, live], np.nan)
+        saliency[live] = np.nanquantile(samples, saliency_quantile, axis=0)
+
+    current = current_weight.detach()
+    previous = previous_weight.detach().to(device=current.device, dtype=current.dtype)
+    delta = torch.linalg.vector_norm((current - previous).flatten(1), dim=1)
+    base = torch.linalg.vector_norm(previous.flatten(1), dim=1)
+    update_ratio = torch.where(base > 0, delta / base, (delta > 0).to(delta.dtype))
+    update_ratio = update_ratio.to(device="cpu", dtype=torch.float64).numpy()
+    if not np.isfinite(update_ratio).all():
+        raise FloatingPointError("non-finite temporal fuzzy weight-update ratio")
+    return {"activity": activity, "update_ratio": update_ratio, "saliency": saliency}
+
+
+def fuzzy_topsis_degree(
+    activity_ema: np.ndarray,
+    update_ema: np.ndarray,
+    saliency_ema: np.ndarray,
+    update_reference: float,
+    saliency_reference: float,
+    *,
+    activity_full: float = 0.1,
+    update_full_ratio: float = 0.1,
+    saliency_full_ratio: float = 0.1,
+) -> Dict[str, np.ndarray]:
+    """Temporal fuzzy degree with a TOPSIS-like process-health score.
+
+    Activity and realised update form a two-dimensional distance to the ideal
+    sleeping/alive states.  Conditional loss saliency is an importance guard:
+    a rare but useful neuron is not recycled merely because its firing process
+    is weak.  Fixed warm-up references avoid layer-mean sensitivity to outliers.
+    """
+    activity = np.asarray(activity_ema, dtype=np.float64)
+    update = np.asarray(update_ema, dtype=np.float64)
+    saliency = np.asarray(saliency_ema, dtype=np.float64)
+    if activity.shape != update.shape or activity.shape != saliency.shape:
+        raise ValueError("temporal fuzzy feature shapes disagree")
+    if (not np.isfinite(activity).all() or not np.isfinite(update).all()
+            or not np.isfinite(saliency).all() or (activity < 0).any()
+            or (activity > 1).any() or (update < 0).any() or (saliency < 0).any()):
+        raise ValueError("invalid temporal fuzzy feature values")
+    if min(activity_full, update_full_ratio, saliency_full_ratio) <= 0:
+        raise ValueError("temporal fuzzy health scales must be positive")
+
+    activity_health = np.clip(activity / activity_full, 0.0, 1.0)
+    update_scale = float(update_reference) * update_full_ratio
+    saliency_scale = float(saliency_reference) * saliency_full_ratio
+    update_health = (np.clip(update / update_scale, 0.0, 1.0)
+                     if update_scale > 0 else np.zeros_like(update))
+    saliency_health = (np.clip(saliency / saliency_scale, 0.0, 1.0)
+                       if saliency_scale > 0 else np.zeros_like(saliency))
+    distance_alive = np.sqrt(
+        0.5 * (1.0 - activity_health) ** 2 + 0.5 * (1.0 - update_health) ** 2
+    )
+    distance_sleep = np.sqrt(
+        0.5 * activity_health ** 2 + 0.5 * update_health ** 2
+    )
+    denom = distance_alive + distance_sleep
+    process_health = np.divide(
+        distance_sleep, denom, out=np.zeros_like(denom), where=denom > 0
+    )
+    degree = np.maximum(process_health, saliency_health)
+    return {
+        "activity_health": activity_health,
+        "update_health": update_health,
+        "saliency_health": saliency_health,
+        "process_health": process_health,
+        "degree": degree,
+    }
+
+
 def learning_degree_reference(values: np.ndarray, quantile: float = 0.75) -> float:
     """Layer quantile of strictly-positive feature values; 0 if none exist.
 
