@@ -273,6 +273,64 @@ def neuron_methods(lr: float) -> list:
     return out
 
 
+def fuzzy_v1(lr: float) -> list:
+    """Pre-result pilot of two proposed multi-signal reset controllers.
+
+    Five fresh paired seeds avoid reusing the seeds on which the published
+    methods were inspected.  Every reset arm opts into the same two-phase
+    outgoing-zero implementation, so simultaneous resets in adjacent layers
+    cannot give one arm a different reset operation.
+    """
+    learning = {
+        "monitor_every": 100,
+        "warmup_steps": 1000,
+        "patience": 3,
+        "cooldown_steps": 1000,
+        "task_grace_steps": 100,
+        "max_reset_fraction": 0.05,
+        "degree_threshold": 0.2,
+        "activity_full": 0.1,
+        "gradient_quantile": 0.75,
+        "saliency_quantile": 0.75,
+        "scale_quantile": 0.75,
+        "gradient_full_ratio": 0.1,
+        "saliency_full_ratio": 0.1,
+        "trend_window": 5,
+        "trend_min_points": 3,
+        "trend_horizon": 2,
+        "trend_patience": 2,
+        "trend_max_degree": 0.5,
+        "trend_min_decline": 0.02,
+    }
+    arms = {
+        "none": {"kind": "none"},
+        "redo_t0p1": {"kind": "redo", "tau": 0.1, "freq": 1000,
+                       "score_batch_size": 64},
+        "redo_t0p25": {"kind": "redo", "tau": 0.25, "freq": 1000,
+                        "score_batch_size": 64},
+        "regrama_t0p01": {"kind": "regrama", "tau": 0.01, "freq": 1000,
+                           "score_batch_size": 64},
+        "snr_eta0p08": {"kind": "snr", "score_batch_size": 64,
+                         "snr_eta": 0.08, "snr_tau_max": 20_000,
+                         "snr_update_every_tasks": 16,
+                         "snr_expansion_factor": 2.0, "snr_min_age": 100},
+        "fuzzy": {"kind": "fuzzy", "learning_degree": learning},
+        "fuzzy_trend": {"kind": "fuzzy_trend", "learning_degree": learning},
+    }
+    out = []
+    for seed in range(10, 15):
+        for name, recycler in arms.items():
+            rid = f"fuzzy_v1_{name}_lr{lr:g}_s{seed}".replace(".", "p")
+            cfg = _base(rid, seed, lr)
+            cfg["recycling"] = dict(recycler, zero_outgoing_after_event=True)
+            cfg["notes"] = (
+                "Prospective fuzzy learning-degree pilot; fresh paired seeds. "
+                "See configs/fuzzy_v1_plan.json, frozen before remote execution."
+            )
+            out.append(cfg)
+    return out
+
+
 def eps_sweep(lr: float) -> list:
     """§B.4 demoted epsilon sweep: ReLU vs LeakyReLU dose-response."""
     out = []
@@ -449,6 +507,7 @@ EXPERIMENTS = {
     "c3": c3_anomaly,
     "c5": c5_optimizer,
     "neuron_methods": neuron_methods,
+    "fuzzy_v1": fuzzy_v1,
     "eps": eps_sweep,
     # CLAUDE.md §9 replacements for the cancelled transformer arm.
     "setting2": setting2_cifar_cnn,

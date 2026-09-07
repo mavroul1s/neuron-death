@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_BEFORE_FIRST_RUN",
+  "frozen_at": "2026-09-07T16:45:27.7526455+03:00",
+  "purpose": "Exploratory pilot of two proposed neuron-reset controllers",
+  "setting": {
+    "dataset": "Permuted-MNIST",
+    "tasks": 200,
+    "model": "784-500-500-500-10 ReLU MLP",
+    "optimizer": "SGD(lr=0.1,momentum=0.9)",
+    "batch_size": 128,
+    "seeds": [10, 11, 12, 13, 14]
+  },
+  "arms": [
+    "none",
+    "ReDo(tau=0.1)",
+    "ReDo(tau=0.25)",
+    "ReGraMa(tau=0.01)",
+    "SNR(eta=0.08)",
+    "FLD fuzzy learning degree",
+    "P-FLD predictive fuzzy learning degree"
+  ],
+  "signals": {
+    "activity": "fraction of the current training minibatch with positive ReLU output",
+    "gradient": "75th percentile absolute incoming-weight gradient per neuron",
+    "loss_saliency": "75th percentile of absolute activation times activation-gradient, conditional on firing"
+  },
+  "fuzzy_rule": "degree=max(loss_saliency_health,min(activity_health,gradient_health))",
+  "normalization": "per-layer robust references are medians of positive 75th-percentile scales observed in the first 1000 training steps, then frozen",
+  "decision": {
+    "FLD": "degree<=0.2 for 3 eligible observations",
+    "P-FLD": "FLD rule or causal Theil-Sen forecast<=0.2 for 2 observations while current degree<=0.5 and slope<-0.02 per monitoring interval",
+    "monitor_every_steps": 100,
+    "task_switch_grace_steps": 100,
+    "cooldown_steps": 1000,
+    "maximum_reset_fraction_per_layer_event": 0.05
+  },
+  "reset": "reinitialize incoming weights and bias from the original initialization, zero outgoing weights and reset optimizer slices",
+  "primary_outcome": "IQM online accuracy over tasks 151-200",
+  "primary_comparisons": "each proposed method versus every baseline on paired fresh seeds",
+  "uncertainty": [
+    "historical task-stratified bootstrap 95% CI for continuity",
+    "seed-trajectory block bootstrap 95% CI",
+    "Bonferroni sensitivity interval across 10 candidate-baseline comparisons"
+  ],
+  "pilot_success_rule": "candidate exceeds the best published baseline by at least 0.2 percentage points, with the Bonferroni seed-block interval above zero, and no collapse or missing prospective logs",
+  "claim_limit": "This single-setting pilot cannot establish SOTA. A positive result must be replicated on an additional valid continual-learning setting and more seeds before that claim."
+}
