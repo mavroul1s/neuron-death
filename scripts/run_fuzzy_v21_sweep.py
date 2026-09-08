@@ -6,6 +6,7 @@ src/. One launch_pair child uses one T4; all targeted runs finish before control
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import signal
@@ -28,8 +29,17 @@ PREFLIGHT_TESTS = [
 
 def load_sweep(source: Path) -> tuple[list[tuple[Path, dict]], list[tuple[Path, dict]]]:
     plan = json.loads((source / "configs/fuzzy_v21_dev_plan.json").read_text())
-    if plan["status"] != "FROZEN_BEFORE_FIRST_RUN":
+    if plan["status"] != "FROZEN_BEFORE_FIRST_V21_RUN":
         raise RuntimeError("V2.1 plan must be frozen before running")
+    pinned = dict(plan["integrity"]["core_source_sha256"])
+    pinned[plan["integrity"]["original_frozen_plan_path"]] = (
+        plan["integrity"]["original_frozen_plan_sha256"])
+    pinned["configs/fuzzy_v2_dev_plan.json"] = plan["integrity"]["prior_v2_plan_sha256"]
+    pinned.update({row["config_path"]: row["config_file_sha256"]
+                   for row in plan["run_manifest"]})
+    for name, expected_hash in pinned.items():
+        if hashlib.sha256((source / name).read_bytes()).hexdigest() != expected_hash:
+            raise RuntimeError(f"Source/config differs from frozen V2.1 plan: {name}")
     configs = [(p, json.loads(p.read_text())) for p in sorted(
         (source / "configs/fuzzy_v21_dev").glob("*.json"))]
     target = [pair for pair in configs if pair[1]["recycling"]["kind"] == "fuzzy_v2"]
@@ -37,6 +47,8 @@ def load_sweep(source: Path) -> tuple[list[tuple[Path, dict]], list[tuple[Path, 
              if pair[1]["recycling"]["kind"] == "fuzzy_v2_yoked_random"]
     if len(configs) != 12 or len(target) != 6 or len(yoked) != 6:
         raise RuntimeError("Expected exactly six targets and six yokes; no baseline reruns")
+    if {c["run_id"] for _, c in configs} != {r["run_id"] for r in plan["run_manifest"]}:
+        raise RuntimeError("V2.1 config identities differ from the frozen manifest")
     expected = {(degree, seed) for degree in (0.3, 0.5) for seed in (15, 16, 17)}
     if {(c["recycling"]["learning_degree"]["degree_threshold"], c["seed"])
             for _, c in target} != expected:

@@ -411,3 +411,25 @@ Two T4s run two independent experiments; the two stages share a 10-hour budget.
 These are pre-run session notes, not generated completed-run rows. Update this
 session record with the private kernel, final completion status and actual
 GPU-hours after execution and archive the outputs.
+
+**Launch update, 2026-09-08 13:04 UTC.** Submitted once to the private kernel
+`nmavros/neuron-death-fuzzy-v1-v21dose0908-b2b92b84` using a new version of the
+existing `nmavros/neuron-death-code` Dataset. Kaggle's submission response was
+ambiguous; the existing read-only reconciliation confirmed the exact owned
+kernel as `RUNNING`, without a second submission. Runtime SHA-256:
+`d81df97042b2c0f2172ded2614afa2d87eba4256ecf3f1d455c29ca0118d4b67`.
+The original frozen plan and all method source hashes remain unchanged.
+
+Five local orchestration tests passed; the verified 6+6 config grid and
+threshold-only changes passed inspection. The notebook runs focused metric,
+reset, temporal-feature and checkpoint tests before launching any experiment.
+The live-log endpoint currently returns HTTP 404, so `RUNNING` alone has not
+been treated as evidence that GPU preflight or training has started.
+
+A hidden local completion worker is watching this submitted kernel, using the
+existing private workflow to download outputs and attempt a private results
+Dataset archive. After successful 12-run completion it extracts the analysis
+tables and runs the V2.1 analysis against the pinned existing V2 results. Local
+state, logs and eventual analysis are under
+`remote_runs/neuron-death-fuzzy-v1-v21dose0908-b2b92b84/`.
+Actual completion, preflight result and GPU-hours remain pending.

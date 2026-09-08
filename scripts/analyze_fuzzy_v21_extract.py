@@ -3,12 +3,13 @@
 Usage: python scripts/analyze_fuzzy_v21_extract.py EXTRACT --out analysis.json
 EXTRACT is the unpacked directory containing runs.json and the parquet tables.
 This is an exploratory three-seed development comparison, separate from the
-original analysis plan. No threshold is selected or changed by this script.
+original analysis plan. The declared development ranking never changes configs.
 """
 
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from copy import deepcopy
 import hashlib
 import json
@@ -77,6 +78,21 @@ def bootstrap_contrast(matrices, weights=None, *, n_bootstrap=10_000,
     weights = [1.0] if weights is None else weights
     if len(weights) != len(arrays):
         raise ValueError("one contrast weight is required for every matrix")
+    # Use the existing V2 implementation where its optional training dependency
+    # can be imported. The fallback below is tested against that exact function
+    # and only avoids requiring PyTorch for an extract-only local analysis.
+    if list(weights) in ([1], [1, -1]):
+        try:
+            from src.analysis.fuzzy_comparison import seed_block_bootstrap
+        except ModuleNotFoundError as error:
+            if error.name != "torch":
+                raise
+        else:
+            result = seed_block_bootstrap(*arrays, n_bootstrap=n_bootstrap,
+                                          confidence=confidence, seed=seed).as_dict()
+            for key in ("point", "ci_lo", "ci_hi"):
+                result[key] *= scale
+            return result
     rng = np.random.default_rng(seed)
     # With three seeds there are only ten distinct bootstrap multisets. Caching
     # avoids recomputing identical IQMs without changing the sampled indices.
@@ -134,7 +150,10 @@ def exact_yoke_check(table: pd.DataFrame, target_id: str, random_id: str) -> dic
 
 def analyze(extract: Path, reference: Path, plan: dict) -> dict:
     new = validate_runs(extract, plan["run_manifest"])
-    old = validate_runs(reference, plan["reused_run_manifest"])
+    old = validate_runs(reference, plan["reused_completed_runs"])
+    for name, expected in plan["prior_evidence"]["extract_sha256"].items():
+        if hashlib.sha256((reference / name).read_bytes()).hexdigest() != expected:
+            raise ValueError(f"reused {name} differs from the frozen source extract")
     if set(new) & set(old):
         raise ValueError("new and reused runs overlap")
     runs = {**new, **old}
@@ -174,7 +193,19 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
         raise ValueError("invalid late accuracy matrix")
 
     metrics = table("metrics", ["run_id", "task_idx", "probe_point", "layer_idx",
-                    "n_neurons", "dead_exact_count"])
+                    "n_neurons", "dead_exact_count", "dead_exact_count_ref",
+                    "dormant_frac_tau_0p1", "dormant_frac_tau_0p1_ref"])
+    metrics = metrics.loc[metrics.probe_point.eq("task_end")]
+    metric_values = metrics[["n_neurons", "dead_exact_count", "dead_exact_count_ref",
+                             "dormant_frac_tau_0p1", "dormant_frac_tau_0p1_ref"]]
+    if not np.isfinite(metric_values.to_numpy(dtype=float)).all():
+        raise ValueError("nonfinite required death/dormancy metrics")
+    for rid, rows in metrics.groupby("run_id"):
+        expected_pairs = {(task, layer) for task in range(200)
+                          for layer in range(len(configs[rid]["model"]["hidden_dims"]))}
+        actual_pairs = list(zip(rows.task_idx, rows.layer_idx))
+        if len(actual_pairs) != len(expected_pairs) or set(actual_pairs) != expected_pairs:
+            raise ValueError(f"{rid}: missing or duplicate task/layer metrics")
     final = metrics.loc[metrics.probe_point.eq("task_end") & metrics.task_idx.eq(199)]
     if set(final.run_id) != set(runs) or final.duplicated(["run_id", "layer_idx"]).any():
         raise ValueError("final metric grid has missing runs or duplicate layers")
@@ -187,7 +218,7 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
         final_dead[rid] = float(rows.dead_exact_count.sum() / sum(widths))
 
     recycling = table("recycling", ["run_id", "step", "layer_idx", "k",
-                                    "n_dead_exact", "n_alive_but_quiet"])
+                                    "n_dead_exact", "n_alive_but_quiet", "n_dead_exact_ref"])
     counts = recycling[["k", "n_dead_exact", "n_alive_but_quiet"]].to_numpy(dtype=float)
     if not np.isfinite(counts).all() or (counts < 0).any() or (counts != np.floor(counts)).any():
         raise ValueError("invalid recycled composition counts")
@@ -195,6 +226,8 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
         raise ValueError("recycled composition does not partition reset units")
     reset_counts = recycling.groupby("run_id").k.sum().to_dict()
     dead_resets = recycling.groupby("run_id").n_dead_exact.sum().to_dict()
+    dead_resets_ref = recycling.groupby("run_id").n_dead_exact_ref.sum().to_dict()
+    per_layer_resets = recycling.groupby(["run_id", "layer_idx"]).k.sum().to_dict()
     for rid in runs:
         if reset_counts.get(rid, 0) != tasks.loc[tasks.run_id.eq(rid), "n_recycled"].sum():
             raise ValueError(f"{rid}: recycling and task reset totals disagree")
@@ -203,6 +236,17 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
         if config["recycling"]["kind"] == "fuzzy_v2_yoked_random":
             target = config["recycling"]["learning_degree"]["yoked_from_run_id"]
             yokes[rid] = exact_yoke_check(recycling, target, rid)
+
+    neuron_rows = Counter()
+    for root in (extract, reference):
+        path = root / "neurons_c4.parquet"
+        if not path.exists():
+            raise ValueError(f"{root}: required per-neuron extract is missing")
+        for batch in pq.ParquetFile(path).iter_batches(columns=["run_id"]):
+            neuron_rows.update(batch.column(0).to_pylist())
+    for rid in runs:
+        if neuron_rows[rid] < 200 * sum(configs[rid]["model"]["hidden_dims"]):
+            raise ValueError(f"{rid}: required per-neuron log is incomplete")
 
     boot = plan["bootstrap"]
     kwargs = {key: boot[key] for key in ("n_bootstrap", "confidence")}
@@ -213,6 +257,7 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
               "new_complete_runs": len(new), "reused_complete_runs": len(old),
               "late_window": window, "seeds": list(SEEDS), "arms": {}, "comparisons": {},
               "selection_advantage_change_vs_v2": {}, "yoked_validation": yokes,
+              "diagnostic_probe_definition": "Unsuffixed dead/dormant values use the current task's fixed 2048-example probe; _ref uses the fixed reference probe.",
               "limitations": ["Whole seed trajectories are resampled together; tasks are not independent replicates.",
                   "Nominal 95% percentile intervals from only three development seeds are exploratory and not multiplicity-adjusted.",
                   "Exceeding a reused comparator here is a development result, not a general SOTA claim.",
@@ -221,6 +266,8 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
         arm_ids = ids[arm]
         resets = [int(reset_counts.get(rid, 0)) for rid in arm_ids]
         shares = [dead_resets.get(rid, 0) / k if k else None for rid, k in zip(arm_ids, resets)]
+        ref_shares = [dead_resets_ref.get(rid, 0) / k if k else None
+                      for rid, k in zip(arm_ids, resets)]
         report["arms"][arm] = {
             "source": "new" if arm_ids[0] in new else "reused_v2",
             "late_accuracy_pct": estimate(matrix, scale=100, seed=boot["accuracy_seed"]),
@@ -228,8 +275,16 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
             "final_dead_pct": estimate([final_dead[rid] for rid in arm_ids], scale=100, seed=1),
             "dead_share_of_resets_pct": None if any(v is None for v in shares)
                                         else estimate(shares, scale=100, seed=4),
+            "dead_share_of_resets_pct_ref": None if any(v is None for v in ref_shares)
+                                            else estimate(ref_shares, scale=100, seed=4),
+            "runtime_minutes": estimate([runs[rid]["summary"]["wall_time_s"] / 60
+                                         for rid in arm_ids], seed=5),
             "per_seed": {str(seeds[rid]): {"run_id": rid, "late_accuracy_pct": 100 * iqm(row),
                           "resets": k, "final_dead_pct": 100 * final_dead[rid],
+                          "completed_tasks": 200, "per_neuron_rows": neuron_rows[rid],
+                          "runtime_minutes": runs[rid]["summary"]["wall_time_s"] / 60,
+                          "resets_by_layer": {str(layer): int(per_layer_resets.get((rid, layer), 0))
+                                              for layer in range(len(configs[rid]["model"]["hidden_dims"]))},
                           "dead_share_of_resets_pct": None if share is None else 100 * share}
                          for rid, row, k, share in zip(arm_ids, matrix, resets, shares)},
         }
@@ -244,6 +299,39 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
             [matrices[arm], matrices[arm + "_yoked_random"], matrices["fuzzy_v2_d0.2"],
              matrices["fuzzy_v2_d0.2_yoked_random"]], [1, -1, -1, 1],
             **kwargs, seed=boot["comparison_seed"], scale=100)
+    report["target_0p5_minus_0p3_pp"] = bootstrap_contrast(
+        [matrices["fuzzy_v2_d0.5"], matrices["fuzzy_v2_d0.3"]], [1, -1],
+        **kwargs, seed=boot["comparison_seed"], scale=100)
+
+    for arm, item in report["arms"].items():
+        # Ratios/efficiency are descriptive ratios of IQM estimates, not a new
+        # accuracy objective or an assertion about marginal reset causality.
+        dose = item["resets"]["point"]
+        item["dose_ratio_to"] = {
+            other: dose / report["arms"][other]["resets"]["point"]
+            if report["arms"][other]["resets"]["point"] else None
+            for other in ("fuzzy_v2_d0.2", "none", "redo", "regrama", "snr")}
+        gain = item["late_accuracy_pct"]["point"] - report["arms"]["none"]["late_accuracy_pct"]["point"]
+        item["descriptive_gain_pp_per_1000_resets"] = gain * 1000 / dose if dose else None
+        item["death_dormancy_pct"] = {}
+        for window_name, bounds in (("late", (150, 199)), ("final", (199, 199))):
+            by_window = item["death_dormancy_pct"][window_name] = {}
+            for probe, suffix in (("current", ""), ("reference", "_ref")):
+                by_probe = by_window[probe] = {}
+                for measure, column in (("dead_exact", "dead_exact_count" + suffix),
+                                        ("dormant_tau0p1", "dormant_frac_tau_0p1" + suffix)):
+                    by_measure = by_probe[measure] = {}
+                    for layer in ("pooled", *range(len(configs[ids[arm][0]]["model"]["hidden_dims"]))):
+                        values = []
+                        for rid in ids[arm]:
+                            rows = metrics.loc[metrics.run_id.eq(rid) & metrics.task_idx.between(*bounds)]
+                            if layer != "pooled":
+                                rows = rows.loc[rows.layer_idx.eq(layer)]
+                            count = rows[column] if measure == "dead_exact" else rows[column] * rows.n_neurons
+                            counts_by_task = count.groupby(rows.task_idx).sum()
+                            widths_by_task = rows.n_neurons.groupby(rows.task_idx).sum()
+                            values.append((counts_by_task / widths_by_task).sort_index().to_numpy())
+                        by_measure[str(layer)] = estimate(values, scale=100, seed=1)
 
     # Read one target's monitor at a time: the large per-neuron tables need not
     # coexist in memory. The cap is taken from each actual config, never fixed at 37.
@@ -269,12 +357,23 @@ def analyze(extract: Path, reference: Path, plan: dict) -> dict:
                       "selected_rows": int(decisions.selected.sum()),
                       "decision_layer_rows": len(decisions),
                       "cap_saturation_pct": float((decisions.selected.to_numpy() == caps).mean() * 100),
-                      "cap_binding_pct": float((decisions.candidates.to_numpy() > caps).mean() * 100)}
+                      "cap_binding_pct": float((decisions.candidates.to_numpy() > caps).mean() * 100),
+                      "events": [dict(step=int(step), layer_idx=int(layer), candidates=int(row.candidates),
+                                      selected=int(row.selected), cap=int(cap), cap_saturated=bool(row.selected == cap))
+                                 for ((step, layer), row), cap in zip(decisions.iterrows(), caps)]}
         report["arms"][labels[rid]]["per_seed"][str(seeds[rid])]["monitor"] = diagnostic
     for arm, item in report["arms"].items():
         if all("monitor" in record for record in item["per_seed"].values()):
             item["cap_saturation_pct"] = estimate([
                 record["monitor"]["cap_saturation_pct"] for record in item["per_seed"].values()], seed=6)
+    ranked = sorted(THRESHOLDS, key=lambda d: (
+        -report["arms"][f"fuzzy_v2_d{d:g}"]["late_accuracy_pct"]["point"],
+        report["arms"][f"fuzzy_v2_d{d:g}"]["resets"]["point"], d))
+    report["development_ranking"] = {
+        "degree_thresholds_best_first": ranked,
+        "rule": "Descending late accuracy IQM; exact ties use fewer IQM resets, then the lower threshold.",
+        "interpretation": "Ranking of these two development settings only; inspect the separate selection-advantage CIs and validate any chosen setting independently.",
+    }
     return report
 
 
