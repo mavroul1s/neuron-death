@@ -204,3 +204,36 @@ No baseline is rerun. Approximate new cost is 2.8 GPU-hours based on observed V2
 runtime, with a shared 10-hour session budget, checkpointing every 10 tasks and
 preservation of outputs before 11 hours. Use the existing private
 `nmavros/neuron-death-code` Dataset and the private Kaggle workflow.
+
+## 2026-09-08 — Temporal fuzzy V2.2 controller sweep, frozen before launch
+
+**Authorization and scope.** The researcher clarified that the target baseline
+is the strongest published comparator (SNR/ReDo/ReGraMa), not the no-reset arm,
+and explicitly asked us to find a setting in which the proposed method is best.
+This remains a separate exploratory method-development extension. The original
+`configs/analysis_plan.json` is unchanged.
+
+**Evidence recorded before the run.** V2.1 threshold 0.50 reached 90.588%,
+beating no reset by 3.068 pp and its exact-yoked random control by 0.503 pp
+[0.385, 0.550], but remained 2.036 pp below SNR. It used only 3673 resets.
+Controller logs show a score-distribution cliff immediately above 0.50 in the
+middle hidden layer: threshold 0.50 selected only 136–207 layer-1 units per run,
+while 21k–83k eligible layer-1 observations scored at most 0.60. Cap saturation
+was zero.
+
+**Change.** `configs/fuzzy_v22_dev/` contains four targeted settings and an
+exact-yoked random control for every setting, seeds 15–17: `(threshold,
+patience,cooldown) = (0.55,2,1000), (0.60,2,1000), (0.60,2,500),
+(0.60,1,500)`. EWMA beta 0.9, task grace 100, monitoring, warmup, score,
+saliency guard, reset cap and reset operation are unchanged. Fixed-trajectory
+simulation on the supplied V2.1 logs projects approximately 9.3k, 10.6k, 13.6k
+and 18.5k resets respectively; these are range estimates, not outcome
+predictions, because new resets change later scores.
+
+**Pre-run plan.** `configs/fuzzy_v22_dev_plan.json` freezes 24 config files,
+their resolved hashes, the evidence hashes, source hashes, estimator and all
+comparisons. All twelve targeted runs complete before any yoked control starts.
+The development winner is the highest late-window IQM, with fewer resets as the
+tie-break. Beating SNR's 92.624% point estimate here triggers a new held-out,
+paired-seed confirmation; the three reused development seeds cannot establish
+SOTA by themselves.

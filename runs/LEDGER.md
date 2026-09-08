@@ -433,3 +433,52 @@ tables and runs the V2.1 analysis against the pinned existing V2 results. Local
 state, logs and eventual analysis are under
 `remote_runs/neuron-death-fuzzy-v1-v21dose0908-b2b92b84/`.
 Actual completion, preflight result and GPU-hours remain pending.
+
+### 2026-09-08 — V2.1 completion and V2.2 pre-run record
+
+The user supplied the completed V2.1 output directly. All 12/12 runs completed,
+all six exact-yoked schedules matched every `(step, layer_idx, k)` row, and raw
+plus analysis archives were preserved. Summed run time was **2.917 GPU-hours**.
+Best target: threshold 0.50, 90.588% late IQM, 3673 mean resets, +0.503 pp
+[+0.385, +0.550] against its exact-yoked random control. This beats no reset
+but remains 2.036 pp below SNR, so the strongest-comparator goal is not met.
+
+V2.2 was then frozen before launch in `configs/fuzzy_v22_dev_plan.json`,
+SHA-256 `84990030d1bf203901b422f218484d2486217255cb62b82900c1897dfb8e2ba9`.
+The 24 planned runs below use two independent T4s, with all targeted runs before
+all controls. Existing baselines are reused. Actual GPU-hours remain pending.
+
+| planned run_id | config hash | status | GPU-hours |
+|---|---|---|---:|
+| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s15 | 81173d4f6f4af6e2 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s15 | 30fedd1580185d60 | planned | 0 |
+| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s16 | cf446496ffd0239a | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s16 | e1c9c3de1cee9b71 | planned | 0 |
+| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s17 | 7291b3eb16c1ef12 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s17 | e7b464504578b20a | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s15 | 3f31c342f8ab8684 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s15 | 2c4f6ee99e00349d | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s16 | 5e56582afc209dc8 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s16 | 73e70a4e64e828c7 | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s17 | 527b81872139ecc0 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s17 | 232451a13a8e39ab | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s15 | 09c7b1fe7280812e | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s15 | f1b370b60255ffea | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s16 | d1632187c50774bb | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s16 | 1bf7fd93a5b653de | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s17 | bbf25d12474b9903 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s17 | 3ec113aae4d7c572 | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s15 | 141afe4b24f91e9c | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s15 | f166a334621d8c9d | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s16 | 840298372b42075c | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s16 | aa5e4c55d7509367 | planned | 0 |
+| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s17 | 621c7367a12a4fa2 | planned | 0 |
+| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s17 | f45348a4a68b2bad | planned | 0 |
+
+**V2.2 launch update, 2026-09-08.** Submitted once to private kernel
+`nmavros/neuron-death-fuzzy-v1-v22sota0908-78924178`. The initial write response
+was ambiguous; read-only reconciliation confirmed that exact owned kernel as
+`RUNNING`, so no duplicate submission was made. Runtime SHA-256:
+`a15895418694f9561bd16e5617d0b75250bb17a4145e424fb6451d4c797d648f`.
+The original frozen analysis plan remains SHA-256
+`274e3425dae79717afb2515692f821487b2fccebaf00d5b5d395885c260a3cdd`.
