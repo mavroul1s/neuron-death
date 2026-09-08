@@ -380,3 +380,34 @@ The repeated ReDo arm reproduced the earlier `tau_redo_t0p1` task-level
 accuracy, loss, probe accuracy, reference-probe accuracy, and reset counts
 bit-for-bit. No additional GPU run is needed before reporting this extension to
 the supervisor.
+
+
+### 2026-09-08 — V2.1 dose sweep prepared; no new GPU time used yet
+Prepared twelve new runs, six targeted then six exact-yoked random, at degree
+thresholds 0.30/0.50 and seeds 15–17. All remaining V2 parameters are retained.
+Reused comparisons come from the completed V2 development session; no baseline
+reruns are scheduled. This is an exploratory method-development extension.
+
+Pre-run plan: `configs/fuzzy_v21_dev_plan.json`, frozen at 2026-09-08T06:07:03+00:00;
+SHA-256 `503cab6e5ecf79cb8ff0d44e45f7ed96b7169888595cbb39478e10a8096129d4`.
+Estimated new cost: approximately 2.8 GPU-hours; actual usage remains pending.
+Two T4s run two independent experiments; the two stages share a 10-hour budget.
+
+| planned run_id | resolved config hash | status | GPU-hours |
+|---|---|---|---:|
+| `fuzzy_v21_dev_fuzzy_v2_d0p3_lr0p1_s15` | `995263b6f50af899` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_yoked_random_d0p3_lr0p1_s15` | `d0a2113ff279870c` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_fuzzy_v2_d0p3_lr0p1_s16` | `987922d7ea299349` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_yoked_random_d0p3_lr0p1_s16` | `ef15fc3512340e37` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_fuzzy_v2_d0p3_lr0p1_s17` | `6fffc37ee156e581` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_yoked_random_d0p3_lr0p1_s17` | `9fb04c2fbb052193` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_fuzzy_v2_d0p5_lr0p1_s15` | `e72ab4d8b04e2c43` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_yoked_random_d0p5_lr0p1_s15` | `598546f7a7c0692a` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_fuzzy_v2_d0p5_lr0p1_s16` | `274d9b5d008908de` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_yoked_random_d0p5_lr0p1_s16` | `38c0a51afbaf9bfb` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_fuzzy_v2_d0p5_lr0p1_s17` | `cebe0cb8778783bd` | prepared, not yet launched | 0 |
+| `fuzzy_v21_dev_yoked_random_d0p5_lr0p1_s17` | `c4fc25d462eee7a7` | prepared, not yet launched | 0 |
+
+These are pre-run session notes, not generated completed-run rows. Update this
+session record with the private kernel, final completion status and actual
+GPU-hours after execution and archive the outputs.

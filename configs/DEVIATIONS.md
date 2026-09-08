@@ -162,3 +162,45 @@ At the researcher and supervisor's explicit request, a separate exploratory
 method-development experiment was added after the original analysis study. It
 does not modify `configs/analysis_plan.json` or any completed baseline. Its
 settings were frozen in `configs/fuzzy_v2_dev_plan.json` before remote launch.
+
+
+## 2026-09-08 — Temporal fuzzy V2.1 dose sweep, frozen before launch
+
+**Authorization and scope.** The researcher explicitly relayed the supervisor's
+request for a new multi-parameter method and a V2.1 dose sweep. This overrides
+the earlier no-new-method scope of AGENTS.md and protocol Part D for this
+separate exploratory extension. The original `configs/analysis_plan.json`, its
+outcomes, thresholds, seed counts, and completed experiments remain untouched.
+
+**Change.** Twelve new configs in `configs/fuzzy_v21_dev/`: targeted temporal V2
+with degree threshold 0.30 or 0.50, plus exact-yoked random for each threshold,
+seeds 15–17. Degree threshold is the only algorithm parameter changed from V2
+0.20. Patience 2, EWMA beta 0.9, cooldown 1000, task grace 100, the score,
+saliency guard, monitoring, warmup, 7.5% cap, optimizer, data and reset operation
+all retain their V2 values. New identities and yoke references prevent reuse of
+old run directories. The six targeted runs finish before the six paired random
+runs begin; two independent experiments run concurrently, one per T4.
+
+**Reason recorded before the run.** Completed V2 improved over no reset by
++2.496 pp and exact-yoked random by +0.441 pp, but reached 90.015% against SNR
+92.624% and ReDo 92.346%. Mean reset count was only about 2113 and cap saturation
+was zero. Prior eligible observations numbered 14685 at degree <=0.20, 48856 at
+<=0.30, and 118795 at <=0.50. This motivates a dose test without redesigning the
+function. Those prior counts are not forecasts of actual new trajectories.
+
+**Pre-run plan.** `configs/fuzzy_v21_dev_plan.json` pins all twelve resolved
+config hashes, the prior V2 analysis and extract hashes, the 18 completed V2
+reference-run hashes, and current core source hashes. Primary readout: IQM of
+online accuracy over tasks 150–199 (zero indexed). CIs resample whole paired seed
+trajectories, 10000 replicates, with no within-task resampling. Both thresholds,
+all planned comparisons, exact event/per-layer dose equality, candidate/cap
+statistics and reset composition must be reported. Seeds 15–17 are development
+seeds: this sweep does not establish SOTA or alter the original frozen verdicts.
+
+**Reuse and cost.** The existing none, ReDo, ReGraMa and SNR runs on seeds 15–17,
+and V2 threshold 0.20 with its paired random control, are reused from
+`remote_runs/neuron-death-fuzzy-v1-v2dev0907-9c5b295b/analysis_unpacked/`.
+No baseline is rerun. Approximate new cost is 2.8 GPU-hours based on observed V2
+runtime, with a shared 10-hour session budget, checkpointing every 10 tasks and
+preservation of outputs before 11 hours. Use the existing private
+`nmavros/neuron-death-code` Dataset and the private Kaggle workflow.
