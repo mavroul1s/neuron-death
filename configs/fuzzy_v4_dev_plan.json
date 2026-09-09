@@ -1,0 +1,277 @@
+{
+  "status": "FROZEN_BEFORE_FIRST_V4_RUN",
+  "frozen_at": "2026-09-09T15:12:43+00:00",
+  "method_name": "Recovery-Accelerated SNR (RA-SNR)",
+  "scope": "Supervisor-authorized method development, separate from configs/analysis_plan.json.",
+  "objective": "Exceed SNR, ReDo and ReGraMa by preserving SNR's adaptive detector and accelerating post-reset reintegration.",
+  "rationale_before_freeze": {
+    "v3_analysis_sha256": "486fe181bba863ce6bcd209a82ad01121d1b2114a78b92b594cca45600508840",
+    "v3_diagnostics_sha256": "4a89a6f5cd13b5256f4c713efdfed755a240a1ea2380a252dd01d07c920d79c1",
+    "snr_schedule_diagnostics_sha256": "252c472d62252a4f9bf270afeab8f322caac2cf6194e68bf3c993b52598f4742",
+    "v3_best_accuracy_pct": 91.312,
+    "v3_target_minus_yoke_pp": -0.698,
+    "snr_accuracy_pct": 92.624,
+    "snr_mean_resets": 52286.3,
+    "diagnosis": "Replacing SNR's event detector with a high-dose fuzzy ranker was harmful. SNR's success comes from many small neuron-specific events and strong dead-unit targeting in deeper layers.",
+    "design_change": "Keep SNR eta=0.08, thresholds, event times, reset operation and optimizer-state reset. After each reset, multiply only that unit's outgoing-weight gradient for a fixed recovery window.",
+    "mechanistic_hypothesis": "Function-preserving outgoing zeroing delays gradient flow back into the reinitialized incoming feature. Faster outgoing reconnection should shorten this recovery bottleneck.",
+    "reused_comparator_points_pct": {
+      "none": 87.52,
+      "redo_tau0.1": 92.346,
+      "regrama_tau0.01": 92.293,
+      "snr_eta0.08": 92.624
+    }
+  },
+  "setting": {
+    "dataset": "online permuted MNIST",
+    "n_tasks": 200,
+    "batch_size": 128,
+    "optimizer": "SGD momentum 0.9",
+    "learning_rate": 0.1,
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "seeds": [
+      15,
+      16,
+      17
+    ]
+  },
+  "variants": [
+    {
+      "id": "b1p5_h25",
+      "recovery_boost": 1.5,
+      "recovery_steps": 25
+    },
+    {
+      "id": "b2p0_h25",
+      "recovery_boost": 2.0,
+      "recovery_steps": 25
+    },
+    {
+      "id": "b1p5_h100",
+      "recovery_boost": 1.5,
+      "recovery_steps": 100
+    },
+    {
+      "id": "b2p0_h100",
+      "recovery_boost": 2.0,
+      "recovery_steps": 100
+    }
+  ],
+  "unchanged_snr_fields": {
+    "snr_eta": 0.08,
+    "snr_tau_max": 20000,
+    "snr_update_every_tasks": 16,
+    "snr_expansion_factor": 2.0,
+    "snr_min_age": 100,
+    "score_batch_size": 64,
+    "zero_outgoing_after_event": true,
+    "reset_optimizer_state": true,
+    "reset": "incoming reinitialization, outgoing zeroing and optimizer-state reset"
+  },
+  "new_run_count": 12,
+  "run_manifest": [
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s15",
+      "kind": "snr_recovery",
+      "variant": "b1p5_h25",
+      "seed": 15,
+      "recovery_boost": 1.5,
+      "recovery_steps": 25,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s15.json",
+      "config_hash": "e5606d56de9e7478",
+      "config_file_sha256": "682e6029112fc6cd663c73703e3b1455c73a95bc2d04ff8242f5d557223dc47b"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s16",
+      "kind": "snr_recovery",
+      "variant": "b1p5_h25",
+      "seed": 16,
+      "recovery_boost": 1.5,
+      "recovery_steps": 25,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s16.json",
+      "config_hash": "c84e6535d678007e",
+      "config_file_sha256": "419f75800f9d13f84f29ddff5dfa33f408ce6196e1a3fa7d2ea1517c67e4dc32"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s17",
+      "kind": "snr_recovery",
+      "variant": "b1p5_h25",
+      "seed": 17,
+      "recovery_boost": 1.5,
+      "recovery_steps": 25,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s17.json",
+      "config_hash": "7667d50250a9423f",
+      "config_file_sha256": "bb0dbfc21adf8abd67a11d30fa20ee3767744867f2373c7608a62d46f5c6bac0"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s15",
+      "kind": "snr_recovery",
+      "variant": "b2p0_h25",
+      "seed": 15,
+      "recovery_boost": 2.0,
+      "recovery_steps": 25,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s15.json",
+      "config_hash": "ebfd7ed50ad8237d",
+      "config_file_sha256": "e5ee78f2fa66641afbecdba049bfb01fcab68721d4113628bd4fc12684db3ea7"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s16",
+      "kind": "snr_recovery",
+      "variant": "b2p0_h25",
+      "seed": 16,
+      "recovery_boost": 2.0,
+      "recovery_steps": 25,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s16.json",
+      "config_hash": "d3d55275560e68b4",
+      "config_file_sha256": "f2a13fedf12b4a8f62d2571897b2ab9ba558ec25030565bc60a46bceb9ed5ecb"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s17",
+      "kind": "snr_recovery",
+      "variant": "b2p0_h25",
+      "seed": 17,
+      "recovery_boost": 2.0,
+      "recovery_steps": 25,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s17.json",
+      "config_hash": "753fba6a0a3f8df5",
+      "config_file_sha256": "2966ba76152dc408a5955ada70b99e5005a526e80302cf852c0fc286785714a6"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s15",
+      "kind": "snr_recovery",
+      "variant": "b1p5_h100",
+      "seed": 15,
+      "recovery_boost": 1.5,
+      "recovery_steps": 100,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s15.json",
+      "config_hash": "a80e0b559d2d42d3",
+      "config_file_sha256": "91fff0ada9dab8e198e359ca9ef7f987893575dbadf6e2a0c3fe537f6b9e1189"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s16",
+      "kind": "snr_recovery",
+      "variant": "b1p5_h100",
+      "seed": 16,
+      "recovery_boost": 1.5,
+      "recovery_steps": 100,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s16.json",
+      "config_hash": "e432248d23c329c0",
+      "config_file_sha256": "f940843d8fb47cdc35a31227ca441998b795d1610f63450e5b43a0fde9149dd3"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s17",
+      "kind": "snr_recovery",
+      "variant": "b1p5_h100",
+      "seed": 17,
+      "recovery_boost": 1.5,
+      "recovery_steps": 100,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s17.json",
+      "config_hash": "6ff86f8c00ddc569",
+      "config_file_sha256": "6dbf0f47aec5e98858d3544d655452573fd023ad43a7abaa8c1573f28cfc9ae9"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s15",
+      "kind": "snr_recovery",
+      "variant": "b2p0_h100",
+      "seed": 15,
+      "recovery_boost": 2.0,
+      "recovery_steps": 100,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s15.json",
+      "config_hash": "aef8d975b5f19b49",
+      "config_file_sha256": "39da54fdc9f476af1cb00c8a35400bce7e02ee7f65edbffc0e9b01c5539f426e"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s16",
+      "kind": "snr_recovery",
+      "variant": "b2p0_h100",
+      "seed": 16,
+      "recovery_boost": 2.0,
+      "recovery_steps": 100,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s16.json",
+      "config_hash": "97e7b48998d269e5",
+      "config_file_sha256": "1ac50d7e6e1e6e4ec077a2c7c2fda5b29fd1d13d54390580941019521f898e3d"
+    },
+    {
+      "run_id": "fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s17",
+      "kind": "snr_recovery",
+      "variant": "b2p0_h100",
+      "seed": 17,
+      "recovery_boost": 2.0,
+      "recovery_steps": 100,
+      "config_path": "configs/fuzzy_v4_dev/fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s17.json",
+      "config_hash": "7df6fc20e74e0c5f",
+      "config_file_sha256": "be864f5561593a5a11993b756c9305a55a3df685e3bae53611f4d42490d58184"
+    }
+  ],
+  "execution": {
+    "run_ids": [
+      "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s15",
+      "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s16",
+      "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s17",
+      "fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s15",
+      "fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s16",
+      "fuzzy_v4_dev_rasnr_b2p0_h25_lr0p1_s17",
+      "fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s15",
+      "fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s16",
+      "fuzzy_v4_dev_rasnr_b1p5_h100_lr0p1_s17",
+      "fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s15",
+      "fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s16",
+      "fuzzy_v4_dev_rasnr_b2p0_h100_lr0p1_s17"
+    ],
+    "gpu_mode": "Two independent runs, one per T4",
+    "session_budget_hours": 10.0,
+    "hard_limit_hours": 12,
+    "checkpoint_every_tasks": 10,
+    "reuse_baselines": true,
+    "rerun_existing_baselines": false,
+    "dataset": "nmavros/neuron-death-code",
+    "visibility": "private"
+  },
+  "primary_outcome": {
+    "column": "online_accuracy",
+    "probe_point": "task_end",
+    "task_window_zero_indexed_inclusive": [
+      150,
+      199
+    ],
+    "estimator": "IQM over the 3x50 seed-by-task matrix"
+  },
+  "bootstrap": {
+    "unit": "whole paired seed trajectory",
+    "resample_tasks": false,
+    "n_bootstrap": 10000,
+    "confidence": 0.95
+  },
+  "planned_comparisons": {
+    "each_variant": [
+      "paired existing SNR eta=0.08",
+      "ReDo tau=0.1",
+      "ReGraMa tau=0.01",
+      "none"
+    ],
+    "report_all_variants": true,
+    "control_note": "The detector and reset rule are identical to the reused SNR arm; the only added treatment is post-reset recovery."
+  },
+  "decision": {
+    "development_winner": "Highest late-window IQM; ties broken by the smaller boost-window product, then fewer resets.",
+    "accuracy_goal": "Point estimate above SNR 92.624%, followed by held-out paired-seed confirmation before a SOTA claim.",
+    "mechanism_goal": "Paired RA-SNR-minus-SNR CI lower bound above zero.",
+    "no_posthoc_changes": "No variants, seed changes or in-run parameter adjustment after freeze."
+  },
+  "integrity": {
+    "original_frozen_plan_path": "configs/analysis_plan.json",
+    "original_frozen_plan_sha256": "274e3425dae79717afb2515692f821487b2fccebaf00d5b5d395885c260a3cdd",
+    "prior_v3_plan_sha256": "314a8406a19a2ee82655484f35d54c9665925a4222d91f3b96bc403ac6e61977",
+    "core_source_sha256": {
+      "src/probes.py": "81c9131fb31cbed1771eb19c1e92909e60b97e17fc5d1c64ea8e51cd225b15de",
+      "src/interventions.py": "10a9ca12308d391ec5dbd2d58a5078d37a42a0c4b8eb4833dd81aada6326d74c",
+      "src/train.py": "62121fe5e88ed22babe4c50b0c52f082f122c913d59df9c4bf88990c84d2cacd",
+      "src/models.py": "c3a3a3722d196b3d7a93565adf3cfbeca6b505a3fdb1287bede94bb2c6e3b125",
+      "src/config.py": "70fae24bc34bb8902cebbb1c6a210bd96a9fed1b2989cb72ae84cd6c272c449f"
+    }
+  }
+}

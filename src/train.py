@@ -137,10 +137,10 @@ class Trainer:
             run_id=self.run_id,
         )
         self.recycler.initialize_learning_monitor(self.model)
-        if self.recycler.cfg.kind == "fuzzy_v2_yoked_random":
+        if self.recycler.cfg.kind in ("fuzzy_v2_yoked_random", "fuzzy_budget_yoked_random"):
             source_run = self.recycler.cfg.learning_degree.get("yoked_from_run_id")
             if not source_run:
-                raise ValueError("fuzzy_v2_yoked_random requires yoked_from_run_id")
+                raise ValueError(f"{self.recycler.cfg.kind} requires yoked_from_run_id")
             source = self.run_dir.parent / str(source_run) / "recycling.parquet"
             if not source.is_file():
                 raise FileNotFoundError(
@@ -283,6 +283,9 @@ class Trainer:
 
             opt.zero_grad(set_to_none=True)
             total.backward()
+            self.recycler.apply_recovery_gradient_boost(
+                model, self.global_step + 1
+            )
             self.grad_tracker.update()  # after backward, before step
             if monitor_now:
                 self.logs["learning_degree"].add_rows(self.recycler.observe_learning(

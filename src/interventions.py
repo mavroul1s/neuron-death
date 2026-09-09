@@ -39,11 +39,14 @@ RECYCLE_KINDS = (
     "random_matched",
     "inverse_matched",
     "snr",
+    "snr_recovery",
     "regrama",
     "fuzzy",
     "fuzzy_trend",
     "fuzzy_v2",
     "fuzzy_v2_yoked_random",
+    "fuzzy_budget",
+    "fuzzy_budget_yoked_random",
 )
 
 
@@ -235,6 +238,10 @@ class RecyclerConfig:
     snr_update_every_tasks: int = 16
     snr_expansion_factor: float = 2.0
     snr_min_age: int = 100
+    # Recovery-Accelerated SNR: after a reset, temporarily amplify gradients
+    # for the zeroed outgoing slice so the new feature reconnects sooner.
+    recovery_boost: float = 1.0
+    recovery_steps: int = 0
     learning_degree: dict = field(default_factory=dict)
     # Opt-in for the new benchmark, applied identically to ALL its arms.
     # A later layer's incoming reset can otherwise overwrite an earlier
@@ -256,6 +263,13 @@ class RecyclerConfig:
             raise ValueError("snr_expansion_factor must be at least 1")
         if not 0 < self.snr_min_age <= self.snr_tau_max:
             raise ValueError("snr_min_age must be in [1, snr_tau_max]")
+        if self.kind == "snr_recovery":
+            if not np.isfinite(self.recovery_boost) or self.recovery_boost <= 1.0:
+                raise ValueError("snr_recovery recovery_boost must be finite and greater than one")
+            if self.recovery_steps <= 0:
+                raise ValueError("snr_recovery recovery_steps must be positive")
+        elif self.recovery_boost != 1.0 or self.recovery_steps != 0:
+            raise ValueError("recovery parameters are only valid for snr_recovery")
 
     @classmethod
     def from_dict(cls, d: Optional[dict]) -> "RecyclerConfig":
@@ -272,6 +286,8 @@ class RecyclerConfig:
             snr_update_every_tasks=int(d.get("snr_update_every_tasks", 16)),
             snr_expansion_factor=float(d.get("snr_expansion_factor", 2.0)),
             snr_min_age=int(d.get("snr_min_age", 100)),
+            recovery_boost=float(d.get("recovery_boost", 1.0)),
+            recovery_steps=int(d.get("recovery_steps", 0)),
             learning_degree=dict(d.get("learning_degree", {})),
             zero_outgoing_after_event=bool(d.get("zero_outgoing_after_event", False)),
         )
@@ -289,6 +305,8 @@ class RecyclerConfig:
             "snr_update_every_tasks": self.snr_update_every_tasks,
             "snr_expansion_factor": self.snr_expansion_factor,
             "snr_min_age": self.snr_min_age,
+            "recovery_boost": self.recovery_boost,
+            "recovery_steps": self.recovery_steps,
             "learning_degree": self.learning_degree,
             "zero_outgoing_after_event": self.zero_outgoing_after_event,
         }
@@ -350,6 +368,7 @@ class Recycler:
         self._snr_thresholds: List[np.ndarray] = []
         self._snr_hist: List[Dict[int, np.ndarray]] = []
         self._snr_pending: List[np.ndarray] = []
+        self._recovery_until: List[np.ndarray] = []
         self.learning_monitor = None
         self._yoked_schedule: Dict[int, Dict[int, int]] = {}
 
@@ -360,24 +379,24 @@ class Recycler:
     def due(self, step: int) -> bool:
         """True on steps 1000, 2000, ... (never on step 0: an event before any
         training would recycle the initialisation itself)."""
-        if self.cfg.kind in ("fuzzy", "fuzzy_trend", "fuzzy_v2"):
+        if self.cfg.kind in ("fuzzy", "fuzzy_trend", "fuzzy_v2", "fuzzy_budget"):
             return self.learning_monitor is not None and any(
                 self.learning_monitor.selected(li).size
                 for li in range(len(self.learning_monitor.widths))
             )
-        if self.cfg.kind == "fuzzy_v2_yoked_random":
+        if self.cfg.kind in ("fuzzy_v2_yoked_random", "fuzzy_budget_yoked_random"):
             return step in self._yoked_schedule
-        if self.cfg.kind == "snr":
+        if self.cfg.kind in ("snr", "snr_recovery"):
             return step > 0 and any(np.any(mask) for mask in self._snr_pending)
         return self.enabled and step > 0 and step % self.cfg.freq == 0
 
     @property
     def needs_training_activations(self) -> bool:
         """Whether the training forward must expose hidden activations."""
-        return self.cfg.kind == "snr"
+        return self.cfg.kind in ("snr", "snr_recovery")
 
     def initialize_learning_monitor(self, model) -> None:
-        if self.cfg.kind not in ("fuzzy", "fuzzy_trend", "fuzzy_v2"):
+        if self.cfg.kind not in ("fuzzy", "fuzzy_trend", "fuzzy_v2", "fuzzy_budget"):
             return
 
         if (getattr(model, "activation_name", None) != "relu"
@@ -386,7 +405,7 @@ class Recycler:
                 or any(m.weight.ndim != 2 for m in model.linears)):
             raise ValueError("fuzzy controllers require a plain ReLU MLP without dropout")
         settings = dict(self.cfg.learning_degree, kind=self.cfg.kind)
-        if self.cfg.kind == "fuzzy_v2":
+        if self.cfg.kind in ("fuzzy_v2", "fuzzy_budget"):
             from .temporal_fuzzy import TemporalFuzzyConfig, TemporalFuzzyMonitor
             self.learning_monitor = TemporalFuzzyMonitor(
                 TemporalFuzzyConfig.from_dict(settings), model
@@ -399,7 +418,7 @@ class Recycler:
 
     def load_yoked_schedule(self, path, widths: Sequence[int]) -> None:
         """Load the exact per-step/per-layer reset counts from a completed V2 run."""
-        if self.cfg.kind != "fuzzy_v2_yoked_random":
+        if self.cfg.kind not in ("fuzzy_v2_yoked_random", "fuzzy_budget_yoked_random"):
             return
         import pyarrow.parquet as pq
 
@@ -437,6 +456,7 @@ class Recycler:
         ]
         self._snr_hist = [{} for _ in widths]
         self._snr_pending = [np.zeros(int(h), dtype=bool) for h in widths]
+        self._recovery_until = [np.full(int(h), -1, dtype=np.int64) for h in widths]
 
     def _snr_add_intervals(
         self, layer_idx: int, ages: np.ndarray, mask: np.ndarray
@@ -463,7 +483,7 @@ class Recycler:
         at least one spatial position) in the mini-batch.  A non-firing unit's
         age increases by the number of examples in that mini-batch.
         """
-        if self.cfg.kind != "snr":
+        if self.cfg.kind not in ("snr", "snr_recovery"):
             return
         widths = [int(probes.as_unit_matrix(p).shape[1]) for p in posts]
         if not self._snr_ages:
@@ -482,7 +502,7 @@ class Recycler:
 
     def end_task(self, task_idx: int) -> None:
         """Update SNR's neuron-specific thresholds at the official cadence."""
-        if self.cfg.kind != "snr" or not self._snr_ages:
+        if self.cfg.kind not in ("snr", "snr_recovery") or not self._snr_ages:
             return
         if (int(task_idx) + 1) % self.cfg.snr_update_every_tasks != 0:
             return
@@ -516,6 +536,46 @@ class Recycler:
             self._snr_pending[layer_idx] = (
                 ages >= self._snr_thresholds[layer_idx]
             )
+
+    @torch.no_grad()
+    def mark_recovery(self, layer_idx: int, selected: np.ndarray, step: int) -> None:
+        """Start the post-reset reconnection window for RA-SNR units."""
+        if self.cfg.kind != "snr_recovery" or selected.size == 0:
+            return
+        self._recovery_until[layer_idx][selected] = int(step) + self.cfg.recovery_steps
+
+    def apply_recovery_gradient_boost(self, model, step: int) -> None:
+        """Amplify only recovering units' zeroed outgoing-weight gradients.
+
+        SNR preserves the current function by zeroing outgoing weights.  That
+        also delays useful gradient flow into the reinitialized incoming
+        weights.  RA-SNR keeps SNR's detector and reset unchanged, but briefly
+        accelerates reconnection of that outgoing slice.  Untouched gradients
+        and standard SNR follow their established execution path exactly.
+        """
+        if self.cfg.kind != "snr_recovery" or not self._recovery_until:
+            return
+        factor = self.cfg.recovery_boost
+        for layer_idx, until in enumerate(self._recovery_until):
+            selected = np.flatnonzero(int(step) <= until)
+            if selected.size == 0:
+                continue
+            outgoing = model.outgoing_linear(layer_idx)
+            grad = outgoing.weight.grad
+            if grad is None:
+                continue
+            idx = torch.as_tensor(selected, dtype=torch.long, device=grad.device)
+            spatial = getattr(model, "outgoing_spatial", lambda _: 1)(layer_idx)
+            if spatial == 1:
+                # Advanced indexing returns a copy, so write the scaled block
+                # back explicitly; an in-place mul on ``grad[:, idx]`` would
+                # silently leave the real gradient unchanged.
+                grad.index_copy_(
+                    1, idx, grad.index_select(1, idx).mul(factor)
+                )
+            else:
+                for unit in idx.tolist():
+                    grad[:, flattened_channel_columns(int(unit), spatial)].mul_(factor)
 
     @staticmethod
     def _grama_scores(model) -> List[np.ndarray]:
@@ -583,16 +643,16 @@ class Recycler:
                 method_scores = scores
                 method_threshold = self.cfg.tau
                 selection_metric = "sokar_activation"
-                if self.cfg.kind in ("fuzzy", "fuzzy_trend", "fuzzy_v2"):
+                if self.cfg.kind in ("fuzzy", "fuzzy_trend", "fuzzy_v2", "fuzzy_budget"):
                     selected = self.learning_monitor.selected(layer_idx)
                     selection_metric = self.cfg.kind + "_learning_degree"
                     method_scores = self.learning_monitor.current_degrees(layer_idx)
                     method_threshold = float(self.cfg.learning_degree.get("degree_threshold", 0.2))
-                elif self.cfg.kind == "fuzzy_v2_yoked_random":
+                elif self.cfg.kind in ("fuzzy_v2_yoked_random", "fuzzy_budget_yoked_random"):
                     k = self._yoked_schedule[int(step)][layer_idx]
                     selected = (np.sort(self._select_rng.choice(scores.size, size=k, replace=False))
                                 .astype(np.int64)) if k else np.empty(0, dtype=np.int64)
-                    selection_metric = "fuzzy_v2_exact_yoked_random"
+                    selection_metric = self.cfg.kind.replace("_yoked_random", "_exact_yoked_random")
                     method_scores = scores
                     method_threshold = float("nan")
                 elif self.cfg.kind == "regrama":
@@ -602,7 +662,7 @@ class Recycler:
                         np.int64
                     )
                     selection_metric = "grama_gradient"
-                elif self.cfg.kind == "snr":
+                elif self.cfg.kind in ("snr", "snr_recovery"):
                     selected = np.flatnonzero(self._snr_pending[layer_idx]).astype(
                         np.int64
                     )
@@ -639,7 +699,7 @@ class Recycler:
                         float(scores[dormant].mean()) if dormant.size else float("nan")
                     ),
                 }
-                if self.cfg.kind == "snr":
+                if self.cfg.kind in ("snr", "snr_recovery"):
                     thresholds = self._snr_thresholds[layer_idx]
                     row.update(
                         {
@@ -650,6 +710,8 @@ class Recycler:
                             ),
                             "snr_min_threshold_layer": int(thresholds.min()),
                             "snr_max_threshold_layer": int(thresholds.max()),
+                            "recovery_boost": float(self.cfg.recovery_boost),
+                            "recovery_steps": int(self.cfg.recovery_steps),
                         }
                     )
                 row.update(comp.as_dict())
@@ -668,7 +730,7 @@ class Recycler:
                     optimizer=optimizer,
                     reset_optimizer_state=self.cfg.reset_optimizer_state,
                 )
-                if self.cfg.kind == "snr" and selected.size:
+                if self.cfg.kind in ("snr", "snr_recovery") and selected.size:
                     ages = self._snr_ages[layer_idx]
                     mask = np.zeros(ages.size, dtype=bool)
                     mask[selected] = True
@@ -677,6 +739,7 @@ class Recycler:
                     self._snr_add_intervals(layer_idx, ages, mask)
                     ages[selected] = 0
                     self._snr_pending[layer_idx][selected] = False
+                    self.mark_recovery(layer_idx, selected, step)
                 result.recycled[layer_idx] = selected
 
             if self.cfg.zero_outgoing_after_event:
@@ -708,12 +771,13 @@ class Recycler:
             "weight_gen": self._weight_gen.get_state(),
             "select_rng": self._select_rng.bit_generator.state,
         }
-        if self.cfg.kind == "snr":
+        if self.cfg.kind in ("snr", "snr_recovery"):
             state["snr"] = {
                 "ages": self._snr_ages,
                 "thresholds": self._snr_thresholds,
                 "hist": self._snr_hist,
                 "pending": self._snr_pending,
+                "recovery_until": self._recovery_until,
             }
         if self.learning_monitor is not None:
             state["learning_degree"] = self.learning_monitor.state_dict()
@@ -739,6 +803,12 @@ class Recycler:
             ]
             self._snr_pending = [
                 np.asarray(x, dtype=bool) for x in snr["pending"]
+            ]
+            self._recovery_until = [
+                np.asarray(x, dtype=np.int64) for x in snr.get(
+                    "recovery_until", [np.full(x.size, -1, dtype=np.int64)
+                                       for x in self._snr_ages]
+                )
             ]
 
 

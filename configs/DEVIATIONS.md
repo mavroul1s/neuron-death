@@ -269,3 +269,70 @@ SNR and V2.2 results are reused. The primary outcome remains late-window IQM
 over tasks 150–199 with whole-paired-seed bootstrap. A development point above
 SNR 92.624% must still be confirmed on new held-out paired seeds before any
 SOTA claim. The original `configs/analysis_plan.json` is unchanged.
+
+## 2026-09-09 — Budgeted Temporal Fuzzy Recycling V3, frozen before launch
+
+**Evidence and diagnosis recorded before the run.** V2.3 completed 24/24 runs
+with exact target/random schedules. Its best target reached 91.227% late IQM
+with 7917 mean resets and retained a +0.213 pp [0.108, 0.333] advantage over
+exact-yoked random. It nevertheless remained 1.397 pp below SNR. The leading
+comparators use much larger doses: approximately 32,755 resets for ReGraMa,
+44,250 for ReDo and 52,286 for SNR. Successive threshold sweeps raised accuracy
+and dose together, but the health threshold still decides both which units and
+how many units are reset.
+
+**Change in method.** Budgeted Temporal Fuzzy Recycling (BT-FR) separates these
+two decisions. A Continual-Backprop-style replacement-rate accumulator fixes
+the number of replacements, while the existing causal V2 temporal degree ranks
+eligible neurons from least to most healthy. The degree still combines EWMA
+firing, realized incoming-weight movement and conditional loss saliency. The
+reset itself is unchanged. A 500-step cooldown serves as maturity; 100-step task
+grace pauses both budget accrual and replacement. This is a new method-development
+arm authorized by the supervisor and researcher, separate from the original
+analysis study.
+
+**Frozen sweep.** Replacement rates 0.00030, 0.00040 and 0.00048 yield nominal
+doses of 32,940, 43,920 and 52,704 resets on the fixed 200-task schedule, which
+match the ReGraMa, ReDo and SNR dose range. Each rate has a targeted run and an
+exact step/layer/cardinality-yoked random control on seeds 15–17, for 18 new
+runs. All nine targets must finish before any yoke begins. Existing baselines
+are reused. `configs/fuzzy_v3_dev_plan.json`, SHA-256
+`314a8406a19a2ee82655484f35d54c9665925a4222d91f3b96bc403ac6e61977`,
+freezes configs, hashes, estimator and comparisons before the first GPU run.
+A development point above SNR must be followed by held-out paired seeds. The
+original `configs/analysis_plan.json` remains unchanged.
+
+## 2026-09-09 — Recovery-Accelerated SNR V4, frozen before launch
+
+**Evidence and change of direction recorded before the run.** BT-FR V3 reached
+91.312% at its best setting and lost to its exact-yoked random control by
+0.698 pp. At high dose, the temporal-fuzzy ranker repeatedly selected neurons
+with a mean health degree above 0.98, so increasing that controller's reset
+budget is harmful. Diagnostics of the existing SNR eta=0.08 runs instead show
+about 52,286 resets spread over roughly 16,766 active event steps, with median
+event size one neuron. SNR also directs about half of deeper-layer resets to
+genuinely dead neurons. These observations motivate preserving SNR's detector
+and schedule rather than replacing them.
+
+**New method.** Recovery-Accelerated SNR (RA-SNR) keeps SNR eta=0.08, its
+neuron-specific inter-firing thresholds, event timing, incoming-weight
+reinitialization, outgoing zeroing and optimizer-state reset. Its added
+mechanism temporarily multiplies only a newly reset neuron's outgoing-weight
+gradient. The hypothesis is that faster reconnection shortens the recovery
+delay created by function-preserving outgoing zeroing and restores useful
+gradient flow into the reinitialized incoming feature sooner.
+
+**Frozen sweep.** Four pre-run recovery settings combine gradient boosts
+{1.5, 2.0} with windows {25, 100} optimizer updates on seeds 15–17, for twelve
+new runs. Existing SNR, ReDo, ReGraMa and none runs on the same development
+seeds are reused and are not rerun. The primary estimator remains late-window
+IQM over tasks 150–199 with paired whole-seed bootstrap. The development winner
+is the highest IQM, with the smaller boost-window product and then fewer resets
+as tie-breaks. A point above SNR 92.624% triggers a new held-out paired-seed
+confirmation before any SOTA claim.
+
+`configs/fuzzy_v4_dev_plan.json`, SHA-256
+`226ec3deaf7c1b7041853c0d9c188b0e527e7d57f96ea751937809e1d843c9f7`,
+freezes the twelve configs, source hashes, estimator and comparisons before the
+first GPU run. This method-development extension is authorized separately from
+the original study. `configs/analysis_plan.json` remains unchanged.

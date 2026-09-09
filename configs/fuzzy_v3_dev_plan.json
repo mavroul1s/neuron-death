@@ -1,0 +1,369 @@
+{
+  "status": "FROZEN_BEFORE_FIRST_V3_RUN",
+  "frozen_at": "2026-09-09T11:53:51+00:00",
+  "method_name": "Budgeted Temporal Fuzzy Recycling (BT-FR)",
+  "scope": "Supervisor-authorized method development, separate from configs/analysis_plan.json.",
+  "objective": "Beat ReDo, ReGraMa and SNR by combining their effective reset dose with the measured temporal-fuzzy selection advantage.",
+  "rationale_before_freeze": {
+    "v23_analysis_sha256": "b101db175b08b1252cddc1a0bedd61eaa2f169c115cde9d4505917d79854d010",
+    "v23_best_accuracy_pct": 91.227,
+    "v23_best_mean_resets": 7917,
+    "v23_exact_yoked_selection_advantage_pp": 0.213,
+    "diagnosis": "V2.3 still couples dose to a health threshold. Its targeting beats an exact schedule-and-cardinality yoke, but the controller self-limits far below the 32.8k-52.3k reset doses of the leading comparators.",
+    "design_change": "A Continual-Backprop-style replacement-rate accumulator determines k. Temporal process health plus conditional loss saliency only ranks eligible neurons. Cooldown acts as maturity and task grace pauses both accrual and replacement.",
+    "reused_comparator_points_pct": {
+      "none": 87.52,
+      "redo_tau0.1": 92.346,
+      "regrama_tau0.01": 92.293,
+      "snr_eta0.08": 92.624
+    }
+  },
+  "setting": {
+    "dataset": "online permuted MNIST",
+    "n_tasks": 200,
+    "batch_size": 128,
+    "optimizer": "SGD momentum 0.9",
+    "learning_rate": 0.1,
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "seeds": [
+      15,
+      16,
+      17
+    ]
+  },
+  "variants": [
+    {
+      "id": "r0p00030",
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "dose_reference": "ReGraMa (32,755 mean resets)"
+    },
+    {
+      "id": "r0p00040",
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "dose_reference": "ReDo tau=0.1 (44,250 mean resets)"
+    },
+    {
+      "id": "r0p00048",
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "dose_reference": "SNR eta=0.08 (52,286 mean resets)"
+    }
+  ],
+  "unchanged_fields": {
+    "ewma_beta": 0.9,
+    "cooldown_steps": 500,
+    "task_grace_steps": 100,
+    "monitor_every": 100,
+    "warmup_steps": 1000,
+    "max_reset_fraction": 0.075,
+    "activity_full": 0.1,
+    "saliency_quantile": 0.75,
+    "scale_quantile": 0.75,
+    "update_full_ratio": 0.1,
+    "saliency_full_ratio": 0.0909090909,
+    "rank": "ascending V2 temporal TOPSIS degree with saliency guard",
+    "reset": "incoming reinitialization, outgoing zeroing and optimizer-state reset"
+  },
+  "new_run_count": 18,
+  "run_manifest": [
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00030_lr0p1_s15",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00030",
+      "seed": 15,
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00030_lr0p1_s15.json",
+      "config_hash": "325382788653cabf",
+      "config_file_sha256": "5fc4935f1124693b5d75aab58ac5c0e3ada5c823f7af74fc82fd45057397a4a2",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00030_lr0p1_s15",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00030",
+      "seed": 15,
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00030_lr0p1_s15.json",
+      "config_hash": "876210229472c876",
+      "config_file_sha256": "86f453073c9c34700d476c0cc060253ee071f3aeb690d125b9609f250a67dd29",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00030_lr0p1_s15"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00030_lr0p1_s16",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00030",
+      "seed": 16,
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00030_lr0p1_s16.json",
+      "config_hash": "1493d7a323165699",
+      "config_file_sha256": "3d9dbff0060f672f9aac49940165824f60ec3c99a146641946ae7b316e9188eb",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00030_lr0p1_s16",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00030",
+      "seed": 16,
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00030_lr0p1_s16.json",
+      "config_hash": "e0d0876514a61ee5",
+      "config_file_sha256": "7c79c9a933df54fc8ca73e0565c72a441002c8fde6e6db1bd1fb217797301086",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00030_lr0p1_s16"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00030_lr0p1_s17",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00030",
+      "seed": 17,
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00030_lr0p1_s17.json",
+      "config_hash": "06242df9ac8b1f19",
+      "config_file_sha256": "58047dbae1d821587d35fee45edf3951e7d427806f079bdc39c7eadaab008497",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00030_lr0p1_s17",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00030",
+      "seed": 17,
+      "replacement_rate": 0.0003,
+      "planned_resets": 32940,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00030_lr0p1_s17.json",
+      "config_hash": "6891d00e3435b467",
+      "config_file_sha256": "b293aabe251b00f86baa8183f8b590c4d3db0f6c4af8d256b9b9d586465ba0e8",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00030_lr0p1_s17"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00040_lr0p1_s15",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00040",
+      "seed": 15,
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00040_lr0p1_s15.json",
+      "config_hash": "aab310acbe814450",
+      "config_file_sha256": "c8c731755421035f0c03d58d482a2069b4cabf21140647aeef566836b6aa93d3",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00040_lr0p1_s15",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00040",
+      "seed": 15,
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00040_lr0p1_s15.json",
+      "config_hash": "e66a1e7379b8fdc6",
+      "config_file_sha256": "4a7efc9fa82a3486b085d8fbcc91899b84278e5ee9a49886f84588dc1cf4c2fc",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00040_lr0p1_s15"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00040_lr0p1_s16",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00040",
+      "seed": 16,
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00040_lr0p1_s16.json",
+      "config_hash": "3e51f804fc642155",
+      "config_file_sha256": "2387e5418384ae205fbb64d31d9635ef15a2b1667e37b4aaa11b2261e88e7e69",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00040_lr0p1_s16",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00040",
+      "seed": 16,
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00040_lr0p1_s16.json",
+      "config_hash": "71e5aff81834c558",
+      "config_file_sha256": "d9af2b9a77c5c18d17a33f2287fe1e403d56a1b5af0681ccd402982f00e660c7",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00040_lr0p1_s16"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00040_lr0p1_s17",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00040",
+      "seed": 17,
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00040_lr0p1_s17.json",
+      "config_hash": "6e9a7a9525c3c431",
+      "config_file_sha256": "1796a10c157d52e180f131c6cddab3637fbb91bf5a3eab19f977548689eb8962",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00040_lr0p1_s17",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00040",
+      "seed": 17,
+      "replacement_rate": 0.0004,
+      "planned_resets": 43920,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00040_lr0p1_s17.json",
+      "config_hash": "c0c16feab648aa2d",
+      "config_file_sha256": "25f4e2b839a7c629c2cbb38230a18f989916ae6819875062453a1177c9d0439e",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00040_lr0p1_s17"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00048_lr0p1_s15",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00048",
+      "seed": 15,
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00048_lr0p1_s15.json",
+      "config_hash": "471c39656654dd65",
+      "config_file_sha256": "d18fa370f47ee0d6e0f32d077d6bcd36ad4fed891c25c398859ef00287de7257",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00048_lr0p1_s15",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00048",
+      "seed": 15,
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00048_lr0p1_s15.json",
+      "config_hash": "5babe9e7f7b6a1a5",
+      "config_file_sha256": "67e5e4db7d66e46ae02fe51a9ec390eede99a562db93b3c30c6d660dd3e9a638",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00048_lr0p1_s15"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00048_lr0p1_s16",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00048",
+      "seed": 16,
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00048_lr0p1_s16.json",
+      "config_hash": "52308ad63feb257f",
+      "config_file_sha256": "0e8699e545a8350d0cda421d9a3703074b612874663b99e156c9a9e85d55de0a",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00048_lr0p1_s16",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00048",
+      "seed": 16,
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00048_lr0p1_s16.json",
+      "config_hash": "08a72e3071a64809",
+      "config_file_sha256": "5cb0778105bd198b4dc98bb04f2db3b9aa0c237fa59dd61778fa55483ec4bbe0",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00048_lr0p1_s16"
+    },
+    {
+      "run_id": "fuzzy_v3_dev_target_r0p00048_lr0p1_s17",
+      "kind": "fuzzy_budget",
+      "variant": "r0p00048",
+      "seed": 17,
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_target_r0p00048_lr0p1_s17.json",
+      "config_hash": "0d818e51a1690d23",
+      "config_file_sha256": "562448b408aef922e43bd4feacd2b4fb69a0a5fff32872b205c38557d6f108ff",
+      "yoked_from_run_id": null
+    },
+    {
+      "run_id": "fuzzy_v3_dev_yoked_r0p00048_lr0p1_s17",
+      "kind": "fuzzy_budget_yoked_random",
+      "variant": "r0p00048",
+      "seed": 17,
+      "replacement_rate": 0.00048,
+      "planned_resets": 52704,
+      "config_path": "configs/fuzzy_v3_dev/fuzzy_v3_dev_yoked_r0p00048_lr0p1_s17.json",
+      "config_hash": "eca8edc7fb51a556",
+      "config_file_sha256": "e2b87583b601dafcc3896eb70ce5b00226671cc3ef3df8dfe8dac3deedd2ee15",
+      "yoked_from_run_id": "fuzzy_v3_dev_target_r0p00048_lr0p1_s17"
+    }
+  ],
+  "execution": {
+    "targeted_run_ids": [
+      "fuzzy_v3_dev_target_r0p00030_lr0p1_s15",
+      "fuzzy_v3_dev_target_r0p00030_lr0p1_s16",
+      "fuzzy_v3_dev_target_r0p00030_lr0p1_s17",
+      "fuzzy_v3_dev_target_r0p00040_lr0p1_s15",
+      "fuzzy_v3_dev_target_r0p00040_lr0p1_s16",
+      "fuzzy_v3_dev_target_r0p00040_lr0p1_s17",
+      "fuzzy_v3_dev_target_r0p00048_lr0p1_s15",
+      "fuzzy_v3_dev_target_r0p00048_lr0p1_s16",
+      "fuzzy_v3_dev_target_r0p00048_lr0p1_s17"
+    ],
+    "yoked_run_ids": [
+      "fuzzy_v3_dev_yoked_r0p00030_lr0p1_s15",
+      "fuzzy_v3_dev_yoked_r0p00030_lr0p1_s16",
+      "fuzzy_v3_dev_yoked_r0p00030_lr0p1_s17",
+      "fuzzy_v3_dev_yoked_r0p00040_lr0p1_s15",
+      "fuzzy_v3_dev_yoked_r0p00040_lr0p1_s16",
+      "fuzzy_v3_dev_yoked_r0p00040_lr0p1_s17",
+      "fuzzy_v3_dev_yoked_r0p00048_lr0p1_s15",
+      "fuzzy_v3_dev_yoked_r0p00048_lr0p1_s16",
+      "fuzzy_v3_dev_yoked_r0p00048_lr0p1_s17"
+    ],
+    "stage_order": "All nine targeted runs complete before any exact-yoked random control starts.",
+    "gpu_mode": "Two independent runs, one per T4",
+    "session_budget_hours": 10.0,
+    "hard_limit_hours": 12,
+    "checkpoint_every_tasks": 10,
+    "reuse_baselines": true,
+    "rerun_existing_baselines": false,
+    "dataset": "nmavros/neuron-death-code",
+    "visibility": "private"
+  },
+  "primary_outcome": {
+    "column": "online_accuracy",
+    "probe_point": "task_end",
+    "task_window_zero_indexed_inclusive": [
+      150,
+      199
+    ],
+    "estimator": "IQM over the 3x50 seed-by-task matrix"
+  },
+  "bootstrap": {
+    "unit": "whole paired seed trajectory",
+    "resample_tasks": false,
+    "n_bootstrap": 10000,
+    "confidence": 0.95
+  },
+  "planned_comparisons": {
+    "each_target": [
+      "paired exact-yoked random",
+      "V2.3 winner",
+      "none",
+      "ReDo tau=0.1",
+      "ReGraMa tau=0.01",
+      "SNR eta=0.08"
+    ],
+    "report_all_variants": true
+  },
+  "decision": {
+    "development_winner": "Highest target late-window IQM; ties broken by fewer resets.",
+    "accuracy_goal": "Point estimate above SNR 92.624%, followed by held-out paired-seed confirmation before a SOTA claim.",
+    "selection_goal": "Paired target-minus-yoked CI lower bound above zero.",
+    "no_posthoc_changes": "No variants, seed changes or in-run parameter adjustment after freeze."
+  },
+  "integrity": {
+    "original_frozen_plan_path": "configs/analysis_plan.json",
+    "original_frozen_plan_sha256": "274e3425dae79717afb2515692f821487b2fccebaf00d5b5d395885c260a3cdd",
+    "prior_v23_plan_sha256": "1af88fb795c661d38566103699402f999c0a01c1f3034dec2a7ff78d630be6d2",
+    "core_source_sha256": {
+      "src/temporal_fuzzy.py": "0be7cd9360f510ba3c176ed9a1bdea8068fe2f6d836ff4f8ace9b618b77593e9",
+      "src/probes.py": "81c9131fb31cbed1771eb19c1e92909e60b97e17fc5d1c64ea8e51cd225b15de",
+      "src/interventions.py": "7776a5ea5305d9c0e0256e43719613ecffc0605f6c91d8c9cc5b63158ed09ca7",
+      "src/train.py": "9f64cac8038e8fa31feae101185275a7facd9baa948d0a50073a2a9d9f88d702",
+      "src/config.py": "70fae24bc34bb8902cebbb1c6a210bd96a9fed1b2989cb72ae84cd6c272c449f"
+    }
+  }
+}

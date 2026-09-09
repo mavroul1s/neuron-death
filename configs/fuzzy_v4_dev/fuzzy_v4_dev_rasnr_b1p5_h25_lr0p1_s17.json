@@ -1,0 +1,38 @@
+{
+  "data": {
+    "batch_size": 128,
+    "n_tasks": 200,
+    "name": "permuted_mnist",
+    "root": "data"
+  },
+  "device": "auto",
+  "model": {
+    "activation": "relu",
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "init": "kaiming_uniform"
+  },
+  "notes": "Pre-run Recovery-Accelerated SNR development sweep; see configs/fuzzy_v4_dev_plan.json.",
+  "optim": {
+    "lr": 0.1,
+    "momentum": 0.9,
+    "name": "sgd"
+  },
+  "recycling": {
+    "kind": "snr_recovery",
+    "score_batch_size": 64,
+    "snr_eta": 0.08,
+    "snr_expansion_factor": 2.0,
+    "snr_min_age": 100,
+    "snr_tau_max": 20000,
+    "snr_update_every_tasks": 16,
+    "zero_outgoing_after_event": true,
+    "recovery_boost": 1.5,
+    "recovery_steps": 25
+  },
+  "run_id": "fuzzy_v4_dev_rasnr_b1p5_h25_lr0p1_s17",
+  "seed": 17
+}

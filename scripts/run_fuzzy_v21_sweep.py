@@ -108,7 +108,7 @@ def check_complete(configs: list[tuple[Path, dict]], runs: Path) -> None:
             raise RuntimeError(f"Incomplete run: {config['run_id']}")
         required = ["config.json", "tasks.parquet", "metrics.parquet",
                     "neurons.parquet", "recycling.parquet"]
-        if config["recycling"]["kind"] == "fuzzy_v2":
+        if config["recycling"]["kind"] in ("fuzzy_v2", "fuzzy_budget"):
             required.append("learning_degree.parquet")
         for name in required:
             if not (directory / name).is_file() or (directory / name).stat().st_size == 0:

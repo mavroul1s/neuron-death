@@ -349,6 +349,64 @@ def test_snr_state_round_trips(gen):
     assert r2._snr_hist[0].keys() == r1._snr_hist[0].keys()
 
 
+def test_snr_recovery_config_requires_a_real_boost_and_window():
+    with pytest.raises(ValueError, match="greater than one"):
+        RecyclerConfig(kind="snr_recovery", recovery_boost=1.0, recovery_steps=25)
+    with pytest.raises(ValueError, match="positive"):
+        RecyclerConfig(kind="snr_recovery", recovery_boost=1.5, recovery_steps=0)
+    with pytest.raises(ValueError, match="only valid"):
+        RecyclerConfig(kind="snr", recovery_boost=1.5, recovery_steps=25)
+
+
+def test_snr_recovery_boosts_only_recovering_outgoing_columns(gen):
+    """RA-SNR must leave every unrelated gradient exactly unchanged."""
+    model = make_model(gen, hidden=(6,), in_features=4, out_features=3)
+    x = torch.rand(12, 4, generator=gen)
+    model(x).sum().backward()
+    before = model.outgoing_linear(0).weight.grad.clone()
+
+    cfg = RecyclerConfig(
+        kind="snr_recovery", recovery_boost=1.5, recovery_steps=25
+    )
+    recycler = Recycler(cfg, seed=9)
+    recycler._initialize_snr([6])
+    recycler.mark_recovery(0, np.array([1, 4], dtype=np.int64), step=10)
+    recycler.apply_recovery_gradient_boost(model, step=35)
+
+    after = model.outgoing_linear(0).weight.grad
+    assert torch.equal(after[:, [0, 2, 3, 5]], before[:, [0, 2, 3, 5]])
+    assert torch.allclose(after[:, [1, 4]], 1.5 * before[:, [1, 4]])
+
+    # The inclusive window contains exactly recovery_steps optimizer updates:
+    # reset at 10, boosted updates 11..35, and no boost at update 36.
+    at_window_end = after.clone()
+    recycler.apply_recovery_gradient_boost(model, step=36)
+    assert torch.equal(model.outgoing_linear(0).weight.grad, at_window_end)
+
+
+def test_standard_snr_has_no_recovery_gradient_side_effect(gen):
+    model = make_model(gen, hidden=(5,), in_features=4, out_features=3)
+    model(torch.rand(8, 4, generator=gen)).sum().backward()
+    before = model.outgoing_linear(0).weight.grad.clone()
+    recycler = Recycler(RecyclerConfig(kind="snr"), seed=3)
+    recycler._initialize_snr([5])
+    recycler.apply_recovery_gradient_boost(model, step=1)
+    assert torch.equal(model.outgoing_linear(0).weight.grad, before)
+
+
+def test_snr_recovery_state_round_trips(gen):
+    cfg = RecyclerConfig(
+        kind="snr_recovery", recovery_boost=2.0, recovery_steps=100
+    )
+    r1 = Recycler(cfg, seed=17)
+    r1._initialize_snr([4])
+    r1.mark_recovery(0, np.array([0, 3], dtype=np.int64), step=50)
+
+    r2 = Recycler(cfg, seed=17)
+    r2.load_state_dict(r1.state_dict())
+    assert np.array_equal(r2._recovery_until[0], np.array([150, -1, -1, 150]))
+
+
 # ---------------------------------------------------------------------------
 # L2 and shrink-and-perturb
 # ---------------------------------------------------------------------------

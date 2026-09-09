@@ -506,27 +506,76 @@ confirmed `RUNNING`. Runtime SHA-256:
 
 | run_id | config hash | status | GPU-hours |
 |---|---|---|---:|
-| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s15 | b4b486b56ec6ad15 | running | 0 |
-| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s15 | 3d8a73ba046866d4 | queued | 0 |
-| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s16 | 0b16fbdd1b869975 | running | 0 |
-| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s16 | 32940f2d5128ef03 | queued | 0 |
-| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s17 | b36a36878e3cbf1a | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s17 | 22b8cb14bcbb656c | queued | 0 |
-| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s15 | 14114729c421ac69 | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s15 | ef67f5a79a96d16f | queued | 0 |
-| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s16 | 3cbf6f172b342a36 | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s16 | ad4899187abcc033 | queued | 0 |
-| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s17 | 5f8be8eaa79a664e | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s17 | 338df5dc895a1a3c | queued | 0 |
-| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s15 | 4a0962ab7880975a | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s15 | 1dddffc6a3d3d272 | queued | 0 |
-| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s16 | f36f622cc859ed78 | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s16 | dbd1d0e3da1a9704 | queued | 0 |
-| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s17 | 89a11e24ad4efd77 | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s17 | df95f799d888e135 | queued | 0 |
-| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s15 | c2e875b23d0720ff | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s15 | eb9e065682d9b391 | queued | 0 |
-| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s16 | 24e0388b79bdce41 | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s16 | 1e860c880eb97dbc | queued | 0 |
-| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s17 | 3cae6be5771acf44 | queued | 0 |
-| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s17 | c428cdef00979160 | queued | 0 |
+| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s15 | b4b486b56ec6ad15 | complete | 0.253 |
+| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s15 | 3d8a73ba046866d4 | complete | 0.209 |
+| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s16 | 0b16fbdd1b869975 | complete | 0.251 |
+| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s16 | 32940f2d5128ef03 | complete | 0.207 |
+| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s17 | b36a36878e3cbf1a | complete | 0.249 |
+| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s17 | 22b8cb14bcbb656c | complete | 0.207 |
+| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s15 | 14114729c421ac69 | complete | 0.250 |
+| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s15 | ef67f5a79a96d16f | complete | 0.208 |
+| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s16 | 3cbf6f172b342a36 | complete | 0.250 |
+| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s16 | ad4899187abcc033 | complete | 0.209 |
+| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s17 | 5f8be8eaa79a664e | complete | 0.248 |
+| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s17 | 338df5dc895a1a3c | complete | 0.208 |
+| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s15 | 4a0962ab7880975a | complete | 0.251 |
+| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s15 | 1dddffc6a3d3d272 | complete | 0.208 |
+| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s16 | f36f622cc859ed78 | complete | 0.248 |
+| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s16 | dbd1d0e3da1a9704 | complete | 0.209 |
+| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s17 | 89a11e24ad4efd77 | complete | 0.248 |
+| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s17 | df95f799d888e135 | complete | 0.209 |
+| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s15 | c2e875b23d0720ff | complete | 0.250 |
+| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s15 | eb9e065682d9b391 | complete | 0.209 |
+| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s16 | 24e0388b79bdce41 | complete | 0.246 |
+| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s16 | 1e860c880eb97dbc | complete | 0.209 |
+| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s17 | 3cae6be5771acf44 | complete | 0.245 |
+| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s17 | c428cdef00979160 | complete | 0.208 |
+
+**V2.3 completion update, 2026-09-09.** All 24/24 runs completed and every
+exact-yoked `(step, layer_idx, k)` schedule matched. Summed run time was
+**5.490 GPU-hours**. The winner was `(process threshold, effective saliency
+cutoff)=(0.99,0.90)`: **91.227%** late IQM [90.969, 91.460], 7917 mean
+resets, +0.213 pp [+0.108, +0.333] against exact-yoked random and +3.708 pp
+against no reset. It improved on the V2.2 winner by +0.265 pp [0.174, 0.330]
+but remained 1.119 pp below ReDo, 1.066 pp below ReGraMa and **1.397 pp below
+SNR**. Final layer-averaged dead fraction was 6.07%. The strongest-comparator
+goal was not met; raising dose also reduced the targeting advantage.
+
+### 2026-09-09 — BT-FR V3 replacement-rate sweep
+
+Frozen before launch in `configs/fuzzy_v3_dev_plan.json`, SHA-256
+`314a8406a19a2ee82655484f35d54c9665925a4222d91f3b96bc403ac6e61977`.
+The 18 runs use replacement rates 0.00030, 0.00040 and 0.00048 on seeds 15–17,
+with all nine targeted BT-FR runs before all nine exact-yoked controls. Existing
+baselines are reused. Submitted once to private kernel
+`nmavros/neuron-death-fuzzy-v1-v3btfr0909-c9919583`; the initial response was
+ambiguous and read-only reconciliation confirmed the exact owned kernel as
+`RUNNING`, so no duplicate submission was made. Runtime SHA-256:
+`68a5433d208f3fe7b7f417f616a3e9fc5fdf77058169f7fec9469b76f35b98f5`.
+
+**BT-FR V3 completion update, 2026-09-09.** All 18/18 runs completed in
+4.257 summed GPU-hours; every one of the nine target/yoke pairs matched exactly
+on all 2196 `(step, layer_idx, k)` rows. The best targeted rate was 0.00030:
+**91.312%** late IQM [91.114, 91.441], +3.793 pp over no reset, but -1.034 pp
+against ReDo, -0.980 pp against ReGraMa and **-1.312 pp against SNR**. The
+targeting result reversed sign: BT-FR lost to its exact-yoked random by
+**-0.698 pp** [-0.943, -0.572]. At rates 0.00040 and 0.00048 the deficits to
+their yokes were -0.892 and -0.914 pp. The high-dose budget forces selection
+well outside the informative low-health tail: mean selected degree was
+0.983–0.989, and a single unit was selected as many as 183 times. The result
+rejects compulsory high-dose temporal-fuzzy ranking; more dose is not a remedy
+for this score.
+
+### 2026-09-09 — Recovery-Accelerated SNR V4 sweep
+
+Frozen before launch in `configs/fuzzy_v4_dev_plan.json`, SHA-256
+`226ec3deaf7c1b7041853c0d9c188b0e527e7d57f96ea751937809e1d843c9f7`.
+Twelve RA-SNR runs combine outgoing-gradient boosts 1.5/2.0 with recovery
+windows 25/100 on seeds 15–17. The SNR eta=0.08 detector and reset rule are
+unchanged; existing SNR, ReDo, ReGraMa and none runs are reused. Submitted once
+to private kernel `nmavros/neuron-death-fuzzy-v1-v4rasnr0909-a36f1ab2` with
+runtime SHA-256
+`5673ba41c49e7caf00024548054b07978da269df62cc53a2b28a899b1323cdc4`.
+The Kaggle submission response was ambiguous; read-only reconciliation
+confirmed the exact owned kernel as `RUNNING`, so no duplicate was submitted.
+Status: running; GPU-hours will be filled from completed summaries.

@@ -1,9 +1,14 @@
-"""Temporal fuzzy learning-degree controller (V2 development experiment).
+"""Temporal fuzzy learning-degree controllers.
 
 The controller is causal and training-only.  It replaces V1's instantaneous,
 strongly correlated activity/gradient/saliency triplet with exponentially
 smoothed firing, realised weight movement and loss saliency.  References are
 calibrated during warm-up and then frozen; the published probes are unchanged.
+
+``fuzzy_budget`` separates *dose* from *selection*: a continual replacement
+budget determines how many units to recycle, while the same temporal fuzzy
+degree ranks the eligible units.  This avoids making a health threshold do two
+jobs and follows Continual Backprop's small, continual diversity injection.
 """
 
 from __future__ import annotations
@@ -38,10 +43,11 @@ class TemporalFuzzyConfig:
     scale_quantile: float = 0.75
     update_full_ratio: float = 0.1
     saliency_full_ratio: float = 0.1
+    replacement_rate: float = 0.0
 
     def __post_init__(self):
-        if self.kind != "fuzzy_v2":
-            raise ValueError("temporal learning-degree kind must be fuzzy_v2")
+        if self.kind not in ("fuzzy_v2", "fuzzy_budget"):
+            raise ValueError("temporal learning-degree kind must be fuzzy_v2 or fuzzy_budget")
         for name in ("monitor_every", "patience"):
             value = getattr(self, name)
             if isinstance(value, bool) or int(value) != value or value <= 0:
@@ -55,6 +61,11 @@ class TemporalFuzzyConfig:
                      "update_full_ratio", "saliency_full_ratio"):
             if not 0 < getattr(self, name) < 1:
                 raise ValueError(f"{name} must lie strictly between zero and one")
+        if self.kind == "fuzzy_budget":
+            if not 0 < self.replacement_rate < 1:
+                raise ValueError("fuzzy_budget replacement_rate must lie strictly between zero and one")
+        elif self.replacement_rate != 0:
+            raise ValueError("replacement_rate is only valid for fuzzy_budget")
 
     @classmethod
     def from_dict(cls, value: dict | None) -> "TemporalFuzzyConfig":
@@ -65,7 +76,7 @@ class TemporalFuzzyConfig:
 
 
 class TemporalFuzzyMonitor:
-    STATE_VERSION = 1
+    STATE_VERSION = 2
 
     def __init__(self, cfg: TemporalFuzzyConfig, model):
         self.cfg = cfg
@@ -85,6 +96,7 @@ class TemporalFuzzyMonitor:
         self._last_reset = [np.full(w, -cfg.cooldown_steps - 1, dtype=np.int64)
                             for w in self.widths]
         self._pending = [np.empty(0, dtype=np.int64) for _ in self.widths]
+        self._budget_credit = np.zeros(len(self.widths), dtype=np.float64)
         self._latest_degree = [np.full(w, np.nan, dtype=np.float64) for w in self.widths]
         self._weight_snapshot = [
             model.incoming_linear(i).weight.detach().clone()
@@ -168,12 +180,36 @@ class TemporalFuzzyMonitor:
             eligible = ((step >= c.warmup_steps) &
                         (step_in_task >= c.task_grace_steps) &
                         ((step - self._last_reset[i]) >= c.cooldown_steps))
-            low = degree <= c.degree_threshold
-            self._low_count[i] = np.where(eligible & low, self._low_count[i] + 1, 0)
-            candidates = np.flatnonzero(eligible & (self._low_count[i] >= c.patience))
-            order = np.lexsort((candidates, degree[candidates]))
             cap = int(np.floor(width * c.max_reset_fraction))
-            selected = candidates[order[:cap]]
+            if c.kind == "fuzzy_budget":
+                # Continual Backprop-style accumulator.  The rate is per unit
+                # per optimizer update; observations occur every monitor_every
+                # updates.  Task grace deliberately pauses both accrual and
+                # replacement, avoiding a deferred burst after a task switch.
+                candidates = np.flatnonzero(eligible)
+                if step >= c.warmup_steps and step_in_task >= c.task_grace_steps:
+                    self._budget_credit[i] += (
+                        width * c.replacement_rate * c.monitor_every
+                    )
+                # The selected rates deliberately yield integer quotas for the
+                # 500-unit benchmark.  A tiny tolerance prevents 15.0 being
+                # represented as 14.999999999999998 and silently losing dose.
+                available = int(np.floor(self._budget_credit[i] + 1e-12))
+                k = min(available, cap, candidates.size)
+                order = np.lexsort((candidates, degree[candidates]))
+                selected = candidates[order[:k]]
+                self._budget_credit[i] = max(
+                    0.0, self._budget_credit[i] - selected.size
+                )
+                self._low_count[i].fill(0)
+                trigger_reason = "temporal_budget"
+            else:
+                low = degree <= c.degree_threshold
+                self._low_count[i] = np.where(eligible & low, self._low_count[i] + 1, 0)
+                candidates = np.flatnonzero(eligible & (self._low_count[i] >= c.patience))
+                order = np.lexsort((candidates, degree[candidates]))
+                selected = candidates[order[:cap]]
+                trigger_reason = "temporal_low"
             self._pending[i] = selected.copy()
             selected_mask = np.zeros(width, dtype=bool)
             selected_mask[selected] = True
@@ -193,7 +229,7 @@ class TemporalFuzzyMonitor:
                     "low_count": int(self._low_count[i][neuron]),
                     "trend_count": 0, "candidate": bool(candidate_mask[neuron]),
                     "selected": bool(selected_mask[neuron]),
-                    "trigger_reason": "temporal_low" if selected_mask[neuron] else "",
+                    "trigger_reason": trigger_reason if selected_mask[neuron] else "",
                     "alive_on_training_batch": bool(values["activity"][neuron] > 0),
                     "preventive_trigger": False,
                     "activity": float(values["activity"][neuron]),
@@ -206,6 +242,8 @@ class TemporalFuzzyMonitor:
                     "gradient_health": float(health["update_health"][neuron]),
                     "saliency_health": float(health["saliency_health"][neuron]),
                     "process_health": float(health["process_health"][neuron]),
+                    "replacement_rate": float(c.replacement_rate),
+                    "budget_credit_after": float(self._budget_credit[i]),
                 })
         if step >= c.warmup_steps:
             self.calibrated = True
@@ -245,6 +283,7 @@ class TemporalFuzzyMonitor:
             "saliency_ema": self._saliency_ema, "seen": self._seen,
             "low_count": self._low_count, "last_reset": self._last_reset,
             "pending": self._pending, "latest_degree": self._latest_degree,
+            "budget_credit": self._budget_credit,
             "weight_snapshot": [v.detach().cpu() for v in self._weight_snapshot],
         })
 
@@ -259,7 +298,7 @@ class TemporalFuzzyMonitor:
             setattr(self, key, state[key])
         for key in ("update_samples", "saliency_samples", "activity_ema", "update_ema",
                     "saliency_ema", "seen", "low_count", "last_reset", "pending",
-                    "latest_degree"):
+                    "latest_degree", "budget_credit"):
             setattr(self, "_" + key, state[key])
         self._weight_snapshot = [
             saved.to(device=current.device, dtype=current.dtype)
