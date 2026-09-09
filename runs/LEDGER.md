@@ -493,3 +493,40 @@ remained 1.384 pp below ReDo, 1.330 pp below ReGraMa and **1.661 pp below SNR**,
 so the strongest-comparator goal was not met. Final layer-averaged dead fraction
 fell to 6.93%. Every candidate was selected, so the reset cap never bound; the
 remaining dose limit comes from the coupled process-health/saliency threshold.
+
+### 2026-09-09 — V2.3 process/saliency dose sweep
+
+Frozen before launch in `configs/fuzzy_v23_dev_plan.json`, SHA-256
+`1af88fb795c661d38566103699402f999c0a01c1f3034dec2a7ff78d630be6d2`. The 24
+runs use seeds 15–17, all targets before all exact-yoked controls, and reuse the
+existing baselines. Submitted once to private kernel
+`nmavros/neuron-death-fuzzy-v1-v23sota0909-0a440e4e`; read-only reconciliation
+confirmed `RUNNING`. Runtime SHA-256:
+`4cd27066465b074b4caf970236edbf87c1ec99561c0d7d296e2ccc6993b02332`.
+
+| run_id | config hash | status | GPU-hours |
+|---|---|---|---:|
+| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s15 | b4b486b56ec6ad15 | running | 0 |
+| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s15 | 3d8a73ba046866d4 | queued | 0 |
+| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s16 | 0b16fbdd1b869975 | running | 0 |
+| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s16 | 32940f2d5128ef03 | queued | 0 |
+| fuzzy_v23_dev_target_t0p80_es0p80_lr0p1_s17 | b36a36878e3cbf1a | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p80_es0p80_lr0p1_s17 | 22b8cb14bcbb656c | queued | 0 |
+| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s15 | 14114729c421ac69 | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s15 | ef67f5a79a96d16f | queued | 0 |
+| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s16 | 3cbf6f172b342a36 | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s16 | ad4899187abcc033 | queued | 0 |
+| fuzzy_v23_dev_target_t0p90_es0p80_lr0p1_s17 | 5f8be8eaa79a664e | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p90_es0p80_lr0p1_s17 | 338df5dc895a1a3c | queued | 0 |
+| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s15 | 4a0962ab7880975a | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s15 | 1dddffc6a3d3d272 | queued | 0 |
+| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s16 | f36f622cc859ed78 | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s16 | dbd1d0e3da1a9704 | queued | 0 |
+| fuzzy_v23_dev_target_t0p99_es0p80_lr0p1_s17 | 89a11e24ad4efd77 | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p99_es0p80_lr0p1_s17 | df95f799d888e135 | queued | 0 |
+| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s15 | c2e875b23d0720ff | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s15 | eb9e065682d9b391 | queued | 0 |
+| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s16 | 24e0388b79bdce41 | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s16 | 1e860c880eb97dbc | queued | 0 |
+| fuzzy_v23_dev_target_t0p99_es0p90_lr0p1_s17 | 3cae6be5771acf44 | queued | 0 |
+| fuzzy_v23_dev_yoked_t0p99_es0p90_lr0p1_s17 | c428cdef00979160 | queued | 0 |
