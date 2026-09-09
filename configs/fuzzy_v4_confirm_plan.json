@@ -1,0 +1,268 @@
+{
+  "status": "FROZEN_BEFORE_FIRST_V4_CONFIRM_RUN",
+  "frozen_at": "2026-09-09T17:41:31+00:00",
+  "method_name": "Recovery-Accelerated SNR (RA-SNR)",
+  "scope": "Held-out confirmation separate from configs/analysis_plan.json.",
+  "trigger": {
+    "v4_development_analysis_sha256": "af2d9c1d97f0ad76cc51a91b407138a3a2a5defbd93cfff1f630da3ae339c03d",
+    "locked_winner": {
+      "recovery_boost": 2.0,
+      "recovery_steps": 100
+    },
+    "development_accuracy_pct": 92.74598684210528,
+    "development_vs_snr_pp": {
+      "point": 0.12212719298249075,
+      "ci_lo": 0.08370614035089208,
+      "ci_hi": 0.1530482456140847
+    }
+  },
+  "heldout_seeds": [
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "arms": {
+    "rasnr": "locked boost=2.0, recovery_steps=100, SNR eta=0.08",
+    "snr": "eta=0.08",
+    "redo": "tau=0.1",
+    "regrama": "tau=0.01"
+  },
+  "new_run_count": 20,
+  "run_manifest": [
+    {
+      "run_id": "fuzzy_v4_confirm_rasnr_lr0p1_s18",
+      "arm": "rasnr",
+      "seed": 18,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_rasnr_lr0p1_s18.json",
+      "config_hash": "b6f0362645580567",
+      "config_file_sha256": "3f0503a6b5636e110268d39c49466cc6930cb8a92875800e5bdfa26cdc2754b7"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_snr_lr0p1_s18",
+      "arm": "snr",
+      "seed": 18,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_snr_lr0p1_s18.json",
+      "config_hash": "174cec2e7d14832d",
+      "config_file_sha256": "ef16f286fe23afbd207a6aa3ee9a44cd25f7f14dde5ce5f397bdcb34ea599a1c"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_redo_lr0p1_s18",
+      "arm": "redo",
+      "seed": 18,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_redo_lr0p1_s18.json",
+      "config_hash": "a4115743a2f8c1f2",
+      "config_file_sha256": "08102bd338bd41c1327c4ab96c17ad9aaa314178489fb2407c4545ec575e0fba"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_regrama_lr0p1_s18",
+      "arm": "regrama",
+      "seed": 18,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_regrama_lr0p1_s18.json",
+      "config_hash": "66dcffd5945ab0a8",
+      "config_file_sha256": "64e809311beff4e8b91282cf7e10442285616c52de5e70e458264c02c96aa7e7"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_rasnr_lr0p1_s19",
+      "arm": "rasnr",
+      "seed": 19,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_rasnr_lr0p1_s19.json",
+      "config_hash": "f309ee19f6100cfd",
+      "config_file_sha256": "0bdc260dfbdd91468dfc4a57c96c1d713a78968c3c45920236a7871abbe7cf6b"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_snr_lr0p1_s19",
+      "arm": "snr",
+      "seed": 19,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_snr_lr0p1_s19.json",
+      "config_hash": "439f00fad85fabcb",
+      "config_file_sha256": "7d5cab4967250d784438247afc8cb068c882369d4341ccc9d27ba048a186f13a"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_redo_lr0p1_s19",
+      "arm": "redo",
+      "seed": 19,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_redo_lr0p1_s19.json",
+      "config_hash": "345ae3394aefd0ec",
+      "config_file_sha256": "a84d0c6554907e1ab3f9531823d7bef3ee1b9ee27b01eb713657a8a23bd129c6"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_regrama_lr0p1_s19",
+      "arm": "regrama",
+      "seed": 19,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_regrama_lr0p1_s19.json",
+      "config_hash": "d36b19f9c9d72a23",
+      "config_file_sha256": "dd672e5179271f72e02f759c995f0d5fc36479ae71238d03780e63cb23d3132f"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_rasnr_lr0p1_s20",
+      "arm": "rasnr",
+      "seed": 20,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_rasnr_lr0p1_s20.json",
+      "config_hash": "3c9ef49f198728e1",
+      "config_file_sha256": "a752bec2f9880f9710754199844f00fc2726a40215b40b9a881ddc6568369ac7"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_snr_lr0p1_s20",
+      "arm": "snr",
+      "seed": 20,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_snr_lr0p1_s20.json",
+      "config_hash": "ea527795b953f1ae",
+      "config_file_sha256": "21ff44a9bfb675af854b7657ed7fad3509a273d0f6d754bf98c8aa448c9f4e5a"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_redo_lr0p1_s20",
+      "arm": "redo",
+      "seed": 20,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_redo_lr0p1_s20.json",
+      "config_hash": "a862d98339f44194",
+      "config_file_sha256": "b6e2813ffdc44aadae16ed3c5e626fb0643cba7d42836768ba699e5c5ad6f13e"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_regrama_lr0p1_s20",
+      "arm": "regrama",
+      "seed": 20,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_regrama_lr0p1_s20.json",
+      "config_hash": "ca76dbf981d664e3",
+      "config_file_sha256": "e236dcfb7446ca8a4830b1746cf6133918a7446e58913f8ee5cbae3b114af56b"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_rasnr_lr0p1_s21",
+      "arm": "rasnr",
+      "seed": 21,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_rasnr_lr0p1_s21.json",
+      "config_hash": "17b9bfd5568fc0af",
+      "config_file_sha256": "ab269e5f077cdd597e46902e54730363e908bd8cf26b84fdb09c3eee5215df24"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_snr_lr0p1_s21",
+      "arm": "snr",
+      "seed": 21,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_snr_lr0p1_s21.json",
+      "config_hash": "5cbfa88afb5dd0a3",
+      "config_file_sha256": "9c467a46daa6ea5042a9e7b7af648e19629075ed0d51a99396668fe635ccf5eb"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_redo_lr0p1_s21",
+      "arm": "redo",
+      "seed": 21,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_redo_lr0p1_s21.json",
+      "config_hash": "79d7e08932904e19",
+      "config_file_sha256": "04ca1541ca2e2d817863c2242a69f8a65c030b48f4dc9a61eaf7f0802d6a4f45"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_regrama_lr0p1_s21",
+      "arm": "regrama",
+      "seed": 21,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_regrama_lr0p1_s21.json",
+      "config_hash": "856975696bd960cd",
+      "config_file_sha256": "c11224b39f9713ecc88a94726368e87a77e67efbcca0a2eaae69aef089873657"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_rasnr_lr0p1_s22",
+      "arm": "rasnr",
+      "seed": 22,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_rasnr_lr0p1_s22.json",
+      "config_hash": "528033f3348a5efd",
+      "config_file_sha256": "d453051bdc5bb1678eb9a96f91b141ea9671dd54f8344bf7afb5915a464ea845"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_snr_lr0p1_s22",
+      "arm": "snr",
+      "seed": 22,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_snr_lr0p1_s22.json",
+      "config_hash": "462b813e95f3b1ab",
+      "config_file_sha256": "7fb913c4b02f966549ad58e0618e69a4d7e575528329293674a8ffb07aa12351"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_redo_lr0p1_s22",
+      "arm": "redo",
+      "seed": 22,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_redo_lr0p1_s22.json",
+      "config_hash": "1c4355f906903f23",
+      "config_file_sha256": "a93f5b047c744a002827c053eb07e6c404ae227af241b146ce72ac47cdbb3af0"
+    },
+    {
+      "run_id": "fuzzy_v4_confirm_regrama_lr0p1_s22",
+      "arm": "regrama",
+      "seed": 22,
+      "config_path": "configs/fuzzy_v4_confirm/fuzzy_v4_confirm_regrama_lr0p1_s22.json",
+      "config_hash": "75b92d105da2c0cd",
+      "config_file_sha256": "61740eaf2ee2dd046349f5e169ac88e10a449f1949fb3c8e83284f4a9fb67201"
+    }
+  ],
+  "execution": {
+    "primary_run_ids": [
+      "fuzzy_v4_confirm_rasnr_lr0p1_s18",
+      "fuzzy_v4_confirm_snr_lr0p1_s18",
+      "fuzzy_v4_confirm_rasnr_lr0p1_s19",
+      "fuzzy_v4_confirm_snr_lr0p1_s19",
+      "fuzzy_v4_confirm_rasnr_lr0p1_s20",
+      "fuzzy_v4_confirm_snr_lr0p1_s20",
+      "fuzzy_v4_confirm_rasnr_lr0p1_s21",
+      "fuzzy_v4_confirm_snr_lr0p1_s21",
+      "fuzzy_v4_confirm_rasnr_lr0p1_s22",
+      "fuzzy_v4_confirm_snr_lr0p1_s22"
+    ],
+    "comparator_run_ids": [
+      "fuzzy_v4_confirm_redo_lr0p1_s18",
+      "fuzzy_v4_confirm_regrama_lr0p1_s18",
+      "fuzzy_v4_confirm_redo_lr0p1_s19",
+      "fuzzy_v4_confirm_regrama_lr0p1_s19",
+      "fuzzy_v4_confirm_redo_lr0p1_s20",
+      "fuzzy_v4_confirm_regrama_lr0p1_s20",
+      "fuzzy_v4_confirm_redo_lr0p1_s21",
+      "fuzzy_v4_confirm_regrama_lr0p1_s21",
+      "fuzzy_v4_confirm_redo_lr0p1_s22",
+      "fuzzy_v4_confirm_regrama_lr0p1_s22"
+    ],
+    "phase_order": "Complete the ten paired RA-SNR/SNR runs before ReDo/ReGraMa.",
+    "gpu_mode": "Two independent runs, one per T4",
+    "session_budget_hours": 10.0,
+    "hard_limit_hours": 12,
+    "checkpoint_every_tasks": 10,
+    "dataset": "nmavros/neuron-death-code",
+    "visibility": "private"
+  },
+  "primary_outcome": {
+    "column": "online_accuracy",
+    "probe_point": "task_end",
+    "task_window_zero_indexed_inclusive": [
+      150,
+      199
+    ],
+    "estimator": "IQM over the 5x50 held-out seed-by-task matrix"
+  },
+  "bootstrap": {
+    "unit": "whole paired seed trajectory",
+    "resample_tasks": false,
+    "n_bootstrap": 20000,
+    "confidence": 0.95
+  },
+  "comparisons": {
+    "primary": "RA-SNR minus SNR on seeds 18-22",
+    "secondary": [
+      "RA-SNR minus ReDo",
+      "RA-SNR minus ReGraMa"
+    ],
+    "supportive": "Combined development plus held-out estimate over seeds 15-22"
+  },
+  "decision": {
+    "confirm": "Held-out RA-SNR-minus-SNR CI lower bound above zero.",
+    "best_method": "RA-SNR point estimate above all three comparators on held-out seeds.",
+    "locked_parameters": "No parameter or seed changes after this freeze."
+  },
+  "integrity": {
+    "original_frozen_plan_path": "configs/analysis_plan.json",
+    "original_frozen_plan_sha256": "274e3425dae79717afb2515692f821487b2fccebaf00d5b5d395885c260a3cdd",
+    "v4_development_plan_sha256": "226ec3deaf7c1b7041853c0d9c188b0e527e7d57f96ea751937809e1d843c9f7",
+    "core_source_sha256": {
+      "src/probes.py": "81c9131fb31cbed1771eb19c1e92909e60b97e17fc5d1c64ea8e51cd225b15de",
+      "src/interventions.py": "10a9ca12308d391ec5dbd2d58a5078d37a42a0c4b8eb4833dd81aada6326d74c",
+      "src/train.py": "62121fe5e88ed22babe4c50b0c52f082f122c913d59df9c4bf88990c84d2cacd",
+      "src/models.py": "c3a3a3722d196b3d7a93565adf3cfbeca6b505a3fdb1287bede94bb2c6e3b125",
+      "src/config.py": "70fae24bc34bb8902cebbb1c6a210bd96a9fed1b2989cb72ae84cd6c272c449f"
+    }
+  }
+}

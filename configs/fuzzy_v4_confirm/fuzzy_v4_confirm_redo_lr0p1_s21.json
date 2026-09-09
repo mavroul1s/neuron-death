@@ -1,0 +1,33 @@
+{
+  "data": {
+    "batch_size": 128,
+    "n_tasks": 200,
+    "name": "permuted_mnist",
+    "root": "data"
+  },
+  "device": "auto",
+  "model": {
+    "activation": "relu",
+    "hidden_dims": [
+      500,
+      500,
+      500
+    ],
+    "init": "kaiming_uniform"
+  },
+  "notes": "Held-out RA-SNR confirmation; see configs/fuzzy_v4_confirm_plan.json.",
+  "optim": {
+    "lr": 0.1,
+    "momentum": 0.9,
+    "name": "sgd"
+  },
+  "recycling": {
+    "freq": 1000,
+    "kind": "redo",
+    "score_batch_size": 64,
+    "tau": 0.1,
+    "zero_outgoing_after_event": true
+  },
+  "run_id": "fuzzy_v4_confirm_redo_lr0p1_s21",
+  "seed": 21
+}
