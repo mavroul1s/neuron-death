@@ -336,3 +336,25 @@ confirmation before any SOTA claim.
 freezes the twelve configs, source hashes, estimator and comparisons before the
 first GPU run. This method-development extension is authorized separately from
 the original study. `configs/analysis_plan.json` remains unchanged.
+
+## 2026-09-09 — RA-SNR held-out confirmation, frozen before launch
+
+**Trigger.** The frozen V4 development sweep completed 12/12 runs. Its locked
+winner, outgoing-gradient boost 2.0 for 100 updates, reached 92.746% late IQM
+and beat same-seed SNR by +0.122 pp [+0.084, +0.153]. This satisfies the V4
+plan's pre-specified trigger for confirmation, but seeds 15–17 were development
+seeds and cannot support a final best-method claim by themselves.
+
+**Confirmation design.** Five previously unused seeds, 18–22, run the locked
+RA-SNR winner, SNR eta=0.08, ReDo tau=0.1 and ReGraMa tau=0.01, for twenty new
+runs. No parameters are tuned in this stage. The ten paired RA-SNR/SNR runs
+finish before the secondary ReDo/ReGraMa comparison. The primary outcome is
+late-window IQM over tasks 150–199 and the primary contrast resamples whole
+paired seed trajectories. Confirmation requires the RA-SNR-minus-SNR 95% CI
+lower bound to exceed zero; RA-SNR must also have the highest point estimate
+among all four methods.
+
+`configs/fuzzy_v4_confirm_plan.json`, SHA-256
+`560b8db8931cd17348a09640b1cdb20ea5167d29aa392516264dd0a204af791b`,
+freezes seeds, configs, hashes, estimator and comparisons before launch. The
+original `configs/analysis_plan.json` remains unchanged.
