@@ -592,3 +592,18 @@ recovery hypothesis: 1.5x/25 steps gained +0.027 pp over SNR, 2.0x/25 and
 first development result in the method series above all three published
 comparators. A held-out paired-seed confirmation remains required before a
 SOTA claim.
+
+### 2026-09-09 — RA-SNR held-out confirmation
+
+Frozen before launch in `configs/fuzzy_v4_confirm_plan.json`, SHA-256
+`560b8db8931cd17348a09640b1cdb20ea5167d29aa392516264dd0a204af791b`.
+Twenty runs use previously unseen seeds 18–22: the locked RA-SNR boost 2.0,
+window 100 winner, SNR eta=0.08, ReDo tau=0.1 and ReGraMa tau=0.01. The ten
+primary RA-SNR/SNR runs complete before the secondary comparator phase.
+Submitted once to private kernel
+`nmavros/neuron-death-fuzzy-v1-v4confirm0909-cc16e4a2`; read-only
+reconciliation confirmed `RUNNING`, so no duplicate submission was made.
+Runtime SHA-256:
+`c1fcddbbf1cc37b732a48e3d6bad3c52fe91bc2a6740f7d62c27749d8bc3fd3a`.
+Status: running; GPU-hours and the held-out verdict will be filled from the
+completed summaries.
