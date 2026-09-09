@@ -237,3 +237,35 @@ The development winner is the highest late-window IQM, with fewer resets as the
 tie-break. Beating SNR's 92.624% point estimate here triggers a new held-out,
 paired-seed confirmation; the three reused development seeds cannot establish
 SOTA by themselves.
+
+## 2026-09-09 — Temporal fuzzy V2.3 process/saliency dose sweep, frozen before launch
+
+**Evidence recorded before the run.** V2.2 completed 24/24 runs with every
+exact-yoked schedule matching. Its best setting (degree threshold 0.60,
+patience 1, cooldown 500) reached 90.963% late IQM with 4889 mean resets and a
++0.388 pp [+0.298, +0.515] selection advantage, but remained 1.661 pp below
+SNR. All logged candidates were selected, so neither the per-event cap nor
+candidate overload limits performance. Final layer-averaged dead fraction was
+already only 6.93%, showing that further reduction in dead count alone is not a
+sufficient objective.
+
+**Change.** The TOPSIS process-health score, EWMA features, reset operation,
+patience 1, cooldown 500, grace 100 and cap 0.075 remain unchanged. The four
+targeted settings jointly vary `degree_threshold` and `saliency_full_ratio` to
+raise process-health coverage while controlling the effective saliency guard:
+`(process threshold, effective V2.2-normalized saliency cutoff) = (0.80,0.80),
+(0.90,0.80), (0.99,0.80), (0.99,0.90)`. The mapping is
+`effective cutoff = degree_threshold * saliency_full_ratio / 0.1`. This creates
+an estimated 8.6k–17k reset ladder on fixed V2.2 trajectories without adding a
+forced reset quota or changing the score definition. Fixed-trajectory estimates
+select the range only; feedback from new resets means they do not predict the
+realised dose or accuracy.
+
+**Pre-run plan.** `configs/fuzzy_v23_dev_plan.json`, SHA-256
+`1af88fb795c661d38566103699402f999c0a01c1f3034dec2a7ff78d630be6d2`, freezes
+24 new runs: each of four targets and its exact-yoked random control on seeds
+15–17. All twelve targets run before any control. Existing none, ReDo, ReGraMa,
+SNR and V2.2 results are reused. The primary outcome remains late-window IQM
+over tasks 150–199 with whole-paired-seed bootstrap. A development point above
+SNR 92.624% must still be confirmed on new held-out paired seeds before any
+SOTA claim. The original `configs/analysis_plan.json` is unchanged.
