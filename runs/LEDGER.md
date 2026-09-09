@@ -450,30 +450,30 @@ all controls. Existing baselines are reused. Actual GPU-hours remain pending.
 
 | planned run_id | config hash | status | GPU-hours |
 |---|---|---|---:|
-| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s15 | 81173d4f6f4af6e2 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s15 | 30fedd1580185d60 | planned | 0 |
-| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s16 | cf446496ffd0239a | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s16 | e1c9c3de1cee9b71 | planned | 0 |
-| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s17 | 7291b3eb16c1ef12 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s17 | e7b464504578b20a | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s15 | 3f31c342f8ab8684 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s15 | 2c4f6ee99e00349d | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s16 | 5e56582afc209dc8 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s16 | 73e70a4e64e828c7 | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s17 | 527b81872139ecc0 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s17 | 232451a13a8e39ab | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s15 | 09c7b1fe7280812e | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s15 | f1b370b60255ffea | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s16 | d1632187c50774bb | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s16 | 1bf7fd93a5b653de | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s17 | bbf25d12474b9903 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s17 | 3ec113aae4d7c572 | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s15 | 141afe4b24f91e9c | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s15 | f166a334621d8c9d | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s16 | 840298372b42075c | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s16 | aa5e4c55d7509367 | planned | 0 |
-| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s17 | 621c7367a12a4fa2 | planned | 0 |
-| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s17 | f45348a4a68b2bad | planned | 0 |
+| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s15 | 81173d4f6f4af6e2 | complete | 0.246 |
+| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s15 | 30fedd1580185d60 | complete | 0.203 |
+| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s16 | cf446496ffd0239a | complete | 0.244 |
+| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s16 | e1c9c3de1cee9b71 | complete | 0.202 |
+| fuzzy_v22_dev_target_t0p55_p2_c1000_lr0p1_s17 | 7291b3eb16c1ef12 | complete | 0.244 |
+| fuzzy_v22_dev_yoked_t0p55_p2_c1000_lr0p1_s17 | e7b464504578b20a | complete | 0.204 |
+| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s15 | 3f31c342f8ab8684 | complete | 0.246 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s15 | 2c4f6ee99e00349d | complete | 0.203 |
+| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s16 | 5e56582afc209dc8 | complete | 0.246 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s16 | 73e70a4e64e828c7 | complete | 0.205 |
+| fuzzy_v22_dev_target_t0p60_p2_c1000_lr0p1_s17 | 527b81872139ecc0 | complete | 0.246 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c1000_lr0p1_s17 | 232451a13a8e39ab | complete | 0.206 |
+| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s15 | 09c7b1fe7280812e | complete | 0.249 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s15 | f1b370b60255ffea | complete | 0.204 |
+| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s16 | d1632187c50774bb | complete | 0.243 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s16 | 1bf7fd93a5b653de | complete | 0.206 |
+| fuzzy_v22_dev_target_t0p60_p2_c500_lr0p1_s17 | bbf25d12474b9903 | complete | 0.245 |
+| fuzzy_v22_dev_yoked_t0p60_p2_c500_lr0p1_s17 | 3ec113aae4d7c572 | complete | 0.206 |
+| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s15 | 141afe4b24f91e9c | complete | 0.247 |
+| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s15 | f166a334621d8c9d | complete | 0.206 |
+| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s16 | 840298372b42075c | complete | 0.244 |
+| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s16 | aa5e4c55d7509367 | complete | 0.207 |
+| fuzzy_v22_dev_target_t0p60_p1_c500_lr0p1_s17 | 621c7367a12a4fa2 | complete | 0.242 |
+| fuzzy_v22_dev_yoked_t0p60_p1_c500_lr0p1_s17 | f45348a4a68b2bad | complete | 0.207 |
 
 **V2.2 launch update, 2026-09-08.** Submitted once to private kernel
 `nmavros/neuron-death-fuzzy-v1-v22sota0908-78924178`. The initial write response
@@ -482,3 +482,14 @@ was ambiguous; read-only reconciliation confirmed that exact owned kernel as
 `a15895418694f9561bd16e5617d0b75250bb17a4145e424fb6451d4c797d648f`.
 The original frozen analysis plan remains SHA-256
 `274e3425dae79717afb2515692f821487b2fccebaf00d5b5d395885c260a3cdd`.
+
+**V2.2 completion update, 2026-09-09.** All 24/24 runs completed and all twelve
+exact-yoked schedules matched every `(step, layer_idx, k)` row. Summed run time
+was **5.401 GPU-hours**; the private output archive and local analysis extract
+were preserved. The development winner was threshold 0.60, patience 1,
+cooldown 500: **90.963%** late IQM, 4889 mean resets, +0.388 pp
+[+0.298, +0.515] against exact-yoked random and +3.443 pp against no reset. It
+remained 1.384 pp below ReDo, 1.330 pp below ReGraMa and **1.661 pp below SNR**,
+so the strongest-comparator goal was not met. Final layer-averaged dead fraction
+fell to 6.93%. Every candidate was selected, so the reset cap never bound; the
+remaining dose limit comes from the coupled process-health/saliency threshold.
