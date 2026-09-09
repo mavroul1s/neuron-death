@@ -579,3 +579,16 @@ runtime SHA-256
 The Kaggle submission response was ambiguous; read-only reconciliation
 confirmed the exact owned kernel as `RUNNING`, so no duplicate was submitted.
 Status: running; GPU-hours will be filled from completed summaries.
+
+**RA-SNR V4 completion update, 2026-09-09.** All 12/12 runs completed in
+**3.998 summed GPU-hours** and matched the frozen manifest/config hashes. The
+development winner was recovery boost 2.0 for 100 optimizer updates:
+**92.746%** late IQM [92.728, 92.760], with 55,785 mean resets. It beat the
+same-seed existing SNR by **+0.122 pp** [+0.084, +0.153], ReDo by +0.400 pp
+[+0.376, +0.456], ReGraMa by +0.453 pp [+0.366, +0.573], and none by
++5.226 pp [+5.048, +5.311]. The effect was monotone enough to support the
+recovery hypothesis: 1.5x/25 steps gained +0.027 pp over SNR, 2.0x/25 and
+1.5x/100 each gained +0.077 pp, and 2.0x/100 gained +0.122 pp. This is the
+first development result in the method series above all three published
+comparators. A held-out paired-seed confirmation remains required before a
+SOTA claim.
