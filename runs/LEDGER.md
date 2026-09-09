@@ -607,3 +607,11 @@ Runtime SHA-256:
 `c1fcddbbf1cc37b732a48e3d6bad3c52fe91bc2a6740f7d62c27749d8bc3fd3a`.
 Status: running; GPU-hours and the held-out verdict will be filled from the
 completed summaries.
+
+**Held-out completion update, 2026-09-09.** All 20/20 runs completed in
+**5.357 summed GPU-hours** and matched the frozen manifest/config hashes.
+Locked RA-SNR reached **92.722%** [92.689, 92.751], versus SNR 92.621%, ReDo
+92.273% and ReGraMa 92.260%. Paired gains were **+0.101 pp over SNR**
+[+0.071, +0.141], +0.449 pp over ReDo [+0.405, +0.491], and +0.462 pp over
+ReGraMa [+0.412, +0.500]. RA-SNR beat SNR on every held-out seed 18–22. The
+pre-specified held-out confirmation criterion passed: `CONFIRMED`.
