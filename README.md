@@ -1,17 +1,23 @@
-# Recycling the Living
+# Beyond Exact Silence: Neuronal Inactivity and Adaptive Recycling in Continual Learning
 
-**Do dormant-neuron interventions work by reviving dead units? They don't.**
+[![Status](https://img.shields.io/badge/Status-Submitted_to_Machine_Learning-blue.svg)](https://github.com/mavroul1s/neuron-death)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Research code for a single analysis paper on dead and dormant neurons in continual
-learning. This is not a method paper — we are not proposing a new algorithm, and
-correctness of measurement matters more here than performance or speed.
+Official experimental infrastructure and code for the research paper:
+> **Beyond Exact Silence: Neuronal Inactivity and Adaptive Recycling in Continual Learning**  
+> *Nikolaos Mavros and Kostas Kolomvatsos*  
+> Submitted to **Machine Learning (Springer Nature)** on 9 November 2026.  
+> Preprint & submission package: `kk_paper/` | Code repository: [https://github.com/mavroul1s/neuron-death](https://github.com/mavroul1s/neuron-death)
 
-**Status:** the original measurement study is complete (335 runs, ~62 GPU-hours,
-153 tests, 9 figures). The supervisor-requested extension comparing ReDo with
-SNR and ReGraMa is also complete: 15/15 Kaggle runs, 200 tasks each, 5 paired
-seeds per method, and 3.67 GPU-hours. Its analysis-ready tables, C4 per-neuron
-extract, session ledger, and complete Git-LFS archive are under
-[`results/neuron_methods/`](results/neuron_methods/).
+---
+
+### Project Overview & Evolution
+
+Originally initiated under the working title *"Recycling the Living"* as an empirical measurement study into neuronal dormancy and mortality (335 runs, ~62 GPU-hours, 153 tests, 9 figures), this project has expanded into an integrated investigation combining **longitudinal inactivity diagnostics** with **Fuzzy Recovery-Accelerated Self-Normalized Resets (Fuzzy-RA-SNR)**—an adaptive online reset-and-recovery procedure evaluated against SNR, ReDo, and ReGraMa across multiple activations, datasets, and architectures.
+
+- **Manuscript Status:** Submitted as an original research article to *Machine Learning* (Springer Nature) on 9 November 2026.
+- **Benchmark & Extension Runs:** Comprises 335 initial measurement runs, 15 ReDo/SNR/ReGraMa baseline comparisons, 40-run multi-activation study (seeds 28–32), 70-run prospective component/replay extension (seeds 33–37), Fashion-MNIST/GELU, and CIFAR-10/CNN runs.
+- **Artifacts & Archives:** Complete Git-LFS result archives, session ledgers, and C4 per-neuron extracts are organized under [`results/neuron_methods/`](results/neuron_methods/) and [`runs/`](runs/).
 
 ---
 
@@ -180,6 +186,42 @@ Plus the one that undercuts the premise directly: **dead units come back on thei
 
 ---
 
+## The Proposed Method: Fuzzy-RA-SNR
+
+To address when a hidden neuron should be replaced and how its replacement should resume contributing, the paper introduces **Fuzzy Recovery-Accelerated Self-Normalized Resets (Fuzzy-RA-SNR)**:
+
+1. **Neuron-Specific Temporal Inactivity Thresholds:** Extends Self-Normalized Resets (SNR; Farias & Jozefiak, 2025), which tracks consecutive minibatches without positive firing ($a_i$) against an adaptive inter-firing history threshold ($T_i$).
+2. **Bounded Takagi–Sugeno Fuzzy Reset Control:** Combines normalized inactivity age $r_i = a_i / T_i$ with recent incoming-gradient retention $g_i = S_i / L_i$ (short- vs. long-term moving averages) mapped to membership functions:
+   $$u_i = \text{clip}(r_i - 0.5, 0, 1), \quad v_i = \text{clip}\left(\frac{g_i - 0.1}{0.9}, 0, 1\right)$$
+   A four-rule zero-order Sugeno controller applies threshold reduction multiplier $m_i = 1 - \frac{1}{4} u_i (1 - v_i)$ (bounded within $[0.75, 1.0]$) so that acceleration strictly requires both accumulated inactivity and declining recent gradients. The controller introduces **zero trainable parameters**.
+3. **Temporary Post-Reset Gradient Amplification (Recovery):** Following reset (resampling incoming weights, zeroing outgoing weights, clearing momentum/optimizer state), outgoing-weight gradients are multiplied by $\beta = 2$ for $H = 100$ updates to accelerate functional reconnection to the network.
+
+### Prospective Component & Replay Evaluation
+
+Prospective 7-arm ReLU component study on 200 permuted-MNIST tasks using 5 independent, paired seeds (33–37) with 11 Bonferroni-adjusted bootstrap intervals:
+
+| Method / Control | Late-task IQM Accuracy (%) | Δ vs Full (pp) | Adjusted 95% Bootstrap Interval | Notes |
+|---|---:|---:|---:|---|
+| **Fuzzy-RA-SNR (Full)** | **92.756%** | — | [92.743, 92.776] | Integrated fuzzy threshold + post-reset recovery |
+| **SNR Baseline** | 92.641% | **+0.115** | [+0.065, +0.147] | Base inter-firing threshold detector |
+| **RA-SNR (Recovery only)** | 92.718% | **+0.037** | [+0.007, +0.072] | Unmodified SNR threshold + $\beta=2, H=100$ recovery |
+| **Fuzzy-only (No recovery)** | 92.621% | **+0.135** | [+0.081, +0.178] | Fuzzy threshold adaptation without post-reset recovery |
+| **Age-only + recovery** | 92.753% | +0.003 | [−0.049, +0.077] | Fuzzy rule ignoring gradient retention ($v_i = 0$) |
+| **Fixed 0.75 + recovery** | 92.799% | −0.044 | [−0.088, −0.011] | Applies max acceleration uniformly; ~21.3% more resets |
+| **Replayed RA-SNR** | 92.754% | +0.002 | [−0.028, +0.037] | Replays exact Full reset schedule & counts; ranking by SNR |
+
+#### Key Empirical Findings
+
+- **Statistical Significance on MNIST:** Full Fuzzy-RA-SNR achieves statistically verified improvements over base SNR (+0.115 pp), RA-SNR (+0.037 pp), and fuzzy-only (+0.135 pp); all three Bonferroni-adjusted intervals exclude zero.
+- **Transferable Schedule via Replay:** The exact replay control matches all 281,361 reset interventions across 263,583 event-layer records. The minute difference (+0.002 pp, interval [−0.028, +0.037]) indicates benefits are transferable through the reset schedule itself.
+- **Activation & Dataset Generalization:**
+  - *Multi-activation Permuted MNIST (seeds 28–32):* Consistent gains over SNR across ReLU (+0.125 pp), GELU (+0.036 pp), LeakyReLU (+0.099 pp), and SiLU (+0.054 pp).
+  - *Fashion-MNIST / GELU MLP:* Full reaches 81.280% (+0.070 pp vs SNR [−0.030, +0.234]).
+  - *CIFAR-10 / 3-layer CNN (label permutations):* Full reaches 59.211% (+0.455 pp vs SNR [−0.656, +1.776]; No reset: 58.116%).
+- **Interventions Beyond Exact Silence:** In the prospective MNIST full arm, 64.12% of the 281,361 reset interventions replace units that remain active (nonzero) on the current probe. In Fashion-MNIST/GELU, **0.00%** of selected units are classified as exactly silent on recorded probes.
+
+---
+
 ## Repository
 
 ```
@@ -206,6 +248,8 @@ neuron-death/
 │   ├── data.py                  permuted MNIST, label-shuffled CIFAR-10
 │   ├── interventions.py         ReDo, random-matched, inverse-matched, L2, shrink&perturb
 │   ├── online_norm.py           Online Normalization (Chiley et al. 2019), eqs 8a–12b
+│   ├── temporal_fuzzy.py        Takagi–Sugeno fuzzy reset controller & recovery
+│   ├── learning_degree.py       gradient retention tracking (Si/Li moving averages)
 │   ├── train.py                 task loop, sharded parquet logging, checkpoint/resume
 │   ├── config.py  logs.py       config hashing, parquet schemas
 │   └── analysis/                post-hoc only; never imported by training code
@@ -342,21 +386,30 @@ On Kaggle: `python scripts/package_for_kaggle.py` stages a code Dataset zip plus
 pre-filled notebook per job. There is no download-at-runtime path anywhere in `src/` —
 Kaggle sessions have no internet, and a silent fallback would be worse than a crash.
 
-## Scope
+## Scope and Attribution
 
-Deliberately excluded: deep RL, Mixture-of-Experts, sparse autoencoders, scaling-law
-sweeps, models above ~50M parameters, distributed training, transformers, and **any new
-reset or recycling method of our own**. The contribution is measurement, not method.
+- **Evolution from Measurement to Method:** The project began as a diagnostic audit of neuron mortality ("Recycling the Living"), demonstrating that neuronal inactivity is a time-dependent state rather than a permanent binary label of death, and that units spontaneously reactivate. It expanded into proposing and prospectively evaluating **Fuzzy-RA-SNR**, combining neuron-specific temporal monitoring with fuzzy threshold adaptation and outgoing-weight gradient recovery.
+- **Attribution and Limitations:** Paired comparisons and replay controls delimit the exact attribution of gains: the gradient-specific increment remains unresolved relative to age-only adaptation, uniform fixed acceleration attains slightly higher MNIST accuracy with ~21.3% more resets, and transfer contrasts on Fashion-MNIST and CIFAR-10 carry statistical uncertainty. We emphasize these boundaries explicitly rather than claiming universal superiority.
+- **Deliberately Excluded:** Deep RL environments, Mixture-of-Experts, transformers, and large foundation models (>50M parameters).
 
-Setting 2 (label-shuffled CIFAR-10 + CNN) was **dropped** after its learning-rate gate
-found no usable setting: lr=0.01 shows no plasticity loss, lr=0.03 and lr=0.1 collapse
-the network entirely by task 30. Its one valid result — the C2-on-channels measurement
-— is retained. See `configs/DEVIATIONS.md`.
+## Citation
+
+```bibtex
+@article{mavros2026beyond,
+  title={Beyond Exact Silence: Neuronal Inactivity and Adaptive Recycling in Continual Learning},
+  author={Mavros, Nikolaos and Kolomvatsos, Kostas},
+  journal={Machine Learning},
+  year={2026},
+  note={Submitted}
+}
+```
 
 ## References
 
 Sokar et al. 2023, *The Dormant Neuron Phenomenon in Deep RL* ·
 Dohare et al. 2024, *Loss of plasticity in deep continual learning* (Nature) ·
-Lyle et al. 2023/2024 · Chiley et al. 2019 (Online Normalization) ·
+Farias & Jozefiak 2025, *Self-normalized resets for plasticity in continual learning* (ICLR) ·
+Liu et al. 2025, *Measure gradients, not activations!* (NeurIPS) ·
+Lyle et al. 2023/2025 · Chiley et al. 2019 (Online Normalization) ·
 Roy & Vetterli 2007 (effective rank) · Agarwal et al. 2021 (IQM, stratified bootstrap) ·
 Ash & Adams 2020 (shrink-and-perturb)
